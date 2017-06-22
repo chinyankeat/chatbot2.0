@@ -58,7 +58,7 @@ var ApiGwAuthTokenExpiry = 0;
 var ApiGwSmsCounter = 0;
 
 var UrlList = [
-		"http://appurl.io/j1801ncp"										// 01
+		"https://appurl.io/j484erpc"									// 01
 		,"http://new.digi.com.my/support/digi-store"					// 02
 		,"https://store.digi.com.my/storefront/reload-details.ep"		// 03
 		,"http://new.digi.com.my/prepaid-plans"							// 04
@@ -306,8 +306,8 @@ bot.dialog('intro', [
 		session.privateConversationData[FallbackState] = 0;			// how many times user type unknown stuff?
 
         session.send('Hi, I\'m Will, your Virtual Assistant.');
-		session.send('\n\n Ask me about plans, roaming and stuff about your 				account. eg." What is infinite?"' + 
-					 '\n\n You can restart the conversation at any time by typing "Start Over" and we\'ll start again from the top. You can also click on tips if you forget any of this.');
+		session.send('Ask me about plans, roaming and stuff about your account. eg." What is infinite?"');
+		session.send('You can restart the conversation at any time by typing "Start Over" and we\'ll start again from the top. You can also click on tips if you forget any of this.');
 		session.send('How may I help you today? ');
     }
 ]);

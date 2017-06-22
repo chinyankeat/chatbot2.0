@@ -956,7 +956,7 @@
                     n.format.options.showHeader && (r = o.createElement("div", {
                         className: "wc-header", id: "start-over-menu"       // added id menu
                     }, 
-                        o.createElement("img", {className: "wc-header-icon",src: botAvatar,onLoad: e.onImageLoad}),
+                        o.createElement("img", {className: "wc-header-icon",src:botAvatar, onLoad: e.onImageLoad}),
                         o.createElement("span", {className: "wc-header-text"}, n.format.strings.title)
                         ));
                     var i;
@@ -5812,7 +5812,7 @@
                     }, o.createElement("img", { className: "wc-intro-logo",src: botImage,ref: function (t) {
                             return e.scrollContent = t; }})
 
-				   	, o.createElement("div", { className: "wc-intro-name"},"HELLO")
+				   	//, o.createElement("div", { className: "wc-intro-name"},"HELLO")
 
 					// Yan Keat: this is added to put in the typing icon
                     , o.createElement("div", { id: "wc-loading-container-id", className:"wc-loading-container"}

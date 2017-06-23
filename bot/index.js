@@ -14,13 +14,16 @@ var math = require('mathjs');
 var request = require("request");
 var emoji = require('node-emoji');
 
+
 ////////////////////////////////////////////////////////////////////////////
 // Botbuilder SDK Azure Extension
 var azure = require('./lib/botbuilder-azure.js');
-
-var tableName = 'BotStore';
-var azureTableClient = new azure.AzureTableClient(tableName, "ykchin", "fFJTJwonpKdJcSvmRGsZqtgdzuVt0YBp1eFdplOcjL4HveCALfa8LWVUdsuAYK0+jdhwcnq11LCRq3qSnbxzPw==");
+var azureTableClient = new azure.AzureTableClient(
+	process.env.AZURE_TABLE_NAME, 
+	process.env.AZURE_TABLE_ACCOUNT_NAME, 
+	process.env.AZURE_TABLE_ACCOUNT_KEY);
 var tableStorage = new azure.AzureBotStorage({ gzipData: false }, azureTableClient);
+
 
 ////////////////////////////////////////////////////////////////////////////
 // API.ai
@@ -309,8 +312,8 @@ bot.dialog('intro', [
 		session.privateConversationData[DialogId] = session.message.address.id;
 		session.privateConversationData[FallbackState] = 0;			// how many times user type unknown stuff?
 
-        session.send('Hi, I\'m Will, your Virtual Assistant.');
-		session.send('Ask me about plans, roaming and stuff about your account. eg." What is infinite?"');
+        session.send('Hi, I\'m Will, your MyDigi Assistant.');
+		session.send('Ask me about plans, roaming and stuff about your account. *eg."What is infinite?"*');
 		session.send('How may I help you today? ');
     }
 ]);

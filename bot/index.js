@@ -1248,6 +1248,9 @@ bot.dialog('CatchAll', [
 							case 'FAQ-Talk-Time-Transfer':
 							case 'Find-A-Store':
 							case 'IDD-CallFail':
+							case 'MyDigi-Intro':
+							case 'MyDigi-Notification':
+							case 'MyDigi-Reload':
 							case 'Plan-Autobilling':
 							case 'Plan-AutoReload':
 							case 'Plan-Buddyz':

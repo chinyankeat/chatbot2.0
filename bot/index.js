@@ -866,7 +866,8 @@ bot.dialog('Roaming-General', [
 					session.send(respCards);
 				} else {
 					session.send(args.result.fulfillment.speech);
-				}				
+				}
+				session.replaceDialog("getFeedbackGeneral");
 			}
 		}
     }
@@ -1126,7 +1127,7 @@ function ProcessApiAiAndAddButton(session, response) {
 					.suggestedActions(
 						builder.SuggestedActions.create(
 							session,[
-								builder.CardAction.openUrl(session, 'http://appurl.io/j1801ncp', 'Download MyDigi'),
+								builder.CardAction.openUrl(session, 'https://appurl.io/j484erpc', 'Download MyDigi'),
 							]
 						)
 					);

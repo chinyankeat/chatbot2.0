@@ -313,11 +313,10 @@ bot.dialog('intro', [
 		session.privateConversationData[FallbackState] = 0;			// how many times user type unknown stuff?
 
         session.send('Hi, I\'m Will, your MyDigi Assistant.');
-		session.send('Ask me about plans, roaming and stuff about your account. *eg."What is infinite?"*');
+		session.send('Ask me about plans, roaming and stuff about your account. eg."*What is infinite?*"');
 		session.send('How may I help you today? ');
     }
 ]);
-
 
 bot.dialog('logging-on', [
     function (session) {
@@ -415,6 +414,16 @@ bot.dialog('getFeedbackPlan', [
 				logConversation(session.message.address.conversation.id, 0/*Dialog ID*/,0/*Dialog State*/,
 								"Feedback"/*Dialog Type*/, PlanRecommended/*Dialog Input*/,"Yes");
 				session.send("Always good to know :D");
+
+				// Add in tips after yes / no
+				var request = apiai_app.textRequest("Tips", {
+					sessionId: session.message.address.conversation.id
+				});
+				request.end();
+				request.on('response', function(response) {
+					ProcessApiAiResponse(session, response);
+				}
+
 				break;
 			case 1:	// No
 				logConversation(session.message.address.conversation.id, 0/*Dialog ID*/,0/*Dialog State*/,
@@ -474,6 +483,15 @@ bot.dialog('getFeedbackGeneral', [
 				session.send("Always good to know :D");
 				logConversation(session.message.address.conversation.id, 0/*Dialog ID*/,0/*Dialog State*/,
 								"Feedback"/*Dialog Type*/, session.privateConversationData[FeedbackIntent]/*Dialog Input*/,"Yes");
+				
+				// Add in tips after yes / no
+				var request = apiai_app.textRequest("Tips", {
+					sessionId: session.message.address.conversation.id
+				});
+				request.end();
+				request.on('response', function(response) {
+					ProcessApiAiResponse(session, response);
+				}
 				break;
 			case 1:	// No
 				session.send("Thanks for your feedback. We will improve on this");
@@ -1191,11 +1209,15 @@ bot.dialog('CatchAll', [
 							case 'Default Welcome Intent':
 							case 'Default-Fallback-Intent':
 							case 'Default-Unknown':
+							case 'FAQ-Bill-Payment': 
+							case 'FAQ-Minimum-Topup':
 							//case 'Plan-MonthlyBilling':
 							//case 'Plan-PayAsYouGo':
 							//case 'Plan-MonthlyBilling':
 							//case 'Plan-PayAsYouGo':
 							case 'Plan-Prepaid-Expire':
+							case 'Roaming-Start':
+							case 'Roaming-CallHome':
 							//case 'Plan-Recommendation':
 							//case 'Plan-RecommendPlanBySocialMedia':
 							//case 'Plan-RecommendPlanByStreaming':
@@ -1205,6 +1227,7 @@ bot.dialog('CatchAll', [
 								session.privateConversationData[FallbackState] = 0;
 								ProcessApiAiResponse(session, response);
 								break;
+							// Batch of Intents requiring Feedback
 							case 'Broadband-QuotaDeduction':
 							case 'Broadband-StreamFree':
 							case 'Broadband-StreamOnDemand':
@@ -1213,12 +1236,11 @@ bot.dialog('CatchAll', [
 							case 'FAQ-Account':
 							case 'FAQ-Account-Change':
 							case 'FAQ-Add-FnF':
-							case 'FAQ-Bill-Payment':  
 							case 'FAQ-Buddyz-Charge':
 							case 'FAQ-Change-Billing-Cycle':
 							case 'FAQ-Connect-ID':
 							case 'FAQ-How-FnF':
-							case 'FAQ-Minimum-Topup':
+							case 'FAQ-Minimum-Topup-ReloadNow':
 							case 'FAQ-Mydigi':
 							case 'FAQ-MyDigi-Download-Bill':
 							case 'FAQ-MyDigi-Pay-For-Other':
@@ -1256,11 +1278,14 @@ bot.dialog('CatchAll', [
 							case 'Roaming-ActivateForOthers':
 							case 'Roaming-ActivateWhileAbroad':
 							case 'Roaming-CallFromOverseas':
-							case 'Roaming-CallHome':
+							case 'Roaming-CallHome-FromMalaysia':
+							case 'Roaming-CallHome-FromOtherCountries':
 							case 'Roaming-General':
 							case 'Roaming-IncreaseCreditLimit':
 							case 'Roaming-RoamLikeHome':
 							case 'Roaming-SharingData':
+							case 'Roaming-Start-LessThan6Months':
+							case 'Roaming-Start-MoreThan6Months':
 							case 'Roaming-Status':
 								session.privateConversationData[FeedbackIntent] = response.result.metadata.intentName;
 								ProcessApiAiResponse(session, response);

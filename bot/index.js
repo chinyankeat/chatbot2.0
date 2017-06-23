@@ -422,7 +422,7 @@ bot.dialog('getFeedbackPlan', [
 				request.end();
 				request.on('response', function(response) {
 					ProcessApiAiResponse(session, response);
-				}
+				});
 
 				break;
 			case 1:	// No
@@ -491,7 +491,7 @@ bot.dialog('getFeedbackGeneral', [
 				request.end();
 				request.on('response', function(response) {
 					ProcessApiAiResponse(session, response);
-				}
+				});
 				break;
 			case 1:	// No
 				session.send("Thanks for your feedback. We will improve on this");

@@ -8,7 +8,24 @@
         <link href="botchat.css" rel="stylesheet" />
 		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     </head>
-    <body style="background:#fd0 url('http://new.digi.com.my/cs/site_template/digi/images/digi-pattern.png');">
+    <body style="background:#fd0 url('http://new.digi.com.my/cs/site_template/digi/images/digi-pattern.png');">			
+
+
+		<script src="md5.js"></script>
+		<script>
+			// Prompt password 
+			var UserInput, pass1 = "76d40b8a4b1f7a927bd4928ff480b548";
+			UserInput = prompt('Please enter your password to view this page!', '');
+			var passwordMd5 = "";
+			if(UserInput) {
+				passwordMd5 = MD5(UserInput);
+			}
+			if (passwordMd5 != pass1) {
+				window.location.replace("http://www.digi.com.my");
+			}
+		</script>
+
+
 		<div id="wc-popup-url" class="wc-popup">
 			<div class="wc-popup-window">
 				<div style="padding: 40px;">
@@ -72,8 +89,9 @@
 				var botAvatar="http://bot.digi.com.my/images/digi-avatar.png";
 				var botTyping="http://bot.digi.com.my/images/typingstatus.png";
 			</script>
-			<script src="botchat.min.js"> </script>
-			<script src="digihelper.js"> </script>
+			<script src="botchat.js"> </script>
+			<script src="digihelper.js"> </script>   
+
 
 			<script>
 				var now = new Date();
@@ -83,6 +101,7 @@
 					window.location.replace("http://bot.digi.com.my/offline.html");
 				<% } %>
 
+				
 				// display offline page, all the time
 				// EXCEPT display BOT in 9pm-10pm in April 2017
 				if(now.getHours()<21) {         //WHITELIST 9pm-12pm for chatbot                

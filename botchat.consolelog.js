@@ -2493,6 +2493,7 @@
                     var e = this.connectionStatus$.getValue();
                     e != s.Ended && e != s.FailedToConnect && this.connectionStatus$.next(s.ExpiredToken)
                 }, e.prototype.startConversation = function () {
+console.log("abc " + e);
                     var e = this.conversationId ? this.domain + "/conversations/" + this.conversationId + "?watermark=" + this.watermark : this.domain + "/conversations",
                         t = this.conversationId ? "GET" : "POST";
                     return i.Observable.ajax({
@@ -2542,6 +2543,7 @@
                 }, e.prototype.postActivity = function (e) {
                     var t = this;
                     return "message" === e.type && e.attachments && e.attachments.length > 0 ? this.postMessageWithAttachments(e) : (h.log("postActivity", e), this.checkConnection(!0).flatMap(function (n) {
+console.log("abc1 " + t.domain);
                         return i.Observable.ajax({
                             method: "POST",
                             url: t.domain + "/conversations/" + t.conversationId + "/activities",
@@ -2578,6 +2580,7 @@
                             })
                         }).count()
                     }).flatMap(function (e) {
+console.log("abc2 " + s.domain);
                         return i.Observable.ajax({
                             method: "POST",
                             url: s.domain + "/conversations/" + s.conversationId + "/upload?userId=" + o.from.id,
@@ -2639,6 +2642,7 @@
                     return i.Observable.create(function (t) {
                         h.log("creating WebSocket", e.streamUrl);
                         var n, r = new WebSocket(e.streamUrl);
+console.log("test234b + " + JSON.stringify(e.streamUrl));
                         return r.onopen = function (e) {
                                 h.log("WebSocket open", e), n = i.Observable.interval(c).subscribe(function (e) {
                                     return r.send(null)
@@ -2646,6 +2650,7 @@
                             }, r.onclose = function (e) {
                                 h.log("WebSocket close", e), n && n.unsubscribe(), t.error(e)
                             }, r.onmessage = function (e) {
+console.log("test234 + " + JSON.stringify(e.data));
                                 return e.data && t.next(JSON.parse(e.data))
                             },
                             function () {
@@ -16517,6 +16522,7 @@
         }
 
         function s(e, t, n) {
+console.log("abc4 " + e);
             return new b({
                 method: "POST",
                 url: e,
@@ -16676,6 +16682,7 @@
                     if (4 === this.readyState) {
 						var s = 1223 === this.status ? 204 : this.status,
                             a = "text" === this.responseType ? this.response || this.responseText : this.response;
+console.log("test 123 " + JSON.stringify(a) + '][' + JSON.stringify(s));
                         0 === s && (s = a ? 200 : 0), 200 <= s && s < 300 ? (o && o.complete(), n.next(e), n.complete()) : (o && o.error(e), n.error(new _("ajax error " + s, this, i)))
                     }
                 }

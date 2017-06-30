@@ -26,7 +26,7 @@ app.post('/', (req, res) => {
 
 app.get('/', (req, res) => {
     const appSecret = (req.cookies.settings && req.cookies.settings.secret) || process.env.APP_SECRET;
-    const endpoint = 'https://directline.botframework.com/v3/directline/tokens/generate';
+    const endpoint = 'https://asia.directline.botframework.com/v3/directline/tokens/generate';
     const auth = 'Bearer';
     fetch(endpoint, {
         method: 'POST',

@@ -66,11 +66,11 @@ var ApiGwAuthTokenExpiry = 0;
 var ApiGwSmsCounter = 0;
 
 var UrlList = [
-		"https://appurl.io/j484erpc"									// 01
-		,"http://new.digi.com.my/support/digi-store"					// 02
+		"https://appurl.io/j484erpc"									// 01 Download MyDigi
+		,"http://new.digi.com.my/support/digi-store"					// 02 Digi Store Locator
 		,"https://store.digi.com.my/storefront/reload-details.ep"		// 03
-		,"http://new.digi.com.my/prepaid-plans"							// 04
-		,"http://new.digi.com.my/postpaid-plans"						// 05
+		,"http://new.digi.com.my/prepaid-plans"							// 04 Digi prepaid web
+		,"http://new.digi.com.my/postpaid-plans"						// 05 Digi Postpaid web
 		,"http://new.digi.com.my/prepaid-addons"						// 06
 		,"http://new.digi.com.my/switch-to-digi"						// 07
 		,"http://new.digi.com.my/business-overview"						// 08
@@ -237,26 +237,25 @@ function ComplainChannels(session) {
 	var now = new Date();
 	currentTime = now.getHours()+8; // offset with GMT
 
-	if(currentTime>=10 && currentTime<=21) {//Between 10am-9pm, show livechat button
-		session.send("* Talk to us on Twitter : \n\n https://twitter.com/mydigi \n\n"
-					 + "* Call us at the Digi Helpline: \n\n 016-2211-800 \n\n"
-					 + "* Chat with us at Digi Live Chat.");
-        var respCards = new builder.Message(session)
-            .attachmentLayout(builder.AttachmentLayout.carousel)
-            .attachments([
-                new builder.HeroCard(session)
-				.title("Live Chat")
-				.buttons([
-					builder.CardAction.openUrl(session, 'http://new.digi.com.my/webchat', 'Start Live Chat')
-				])
-					
-            ]);
-		session.send(respCards);		
-		
-	} else {
-		session.send("* Talk to us on Twitter : \n\n https://twitter.com/mydigi \n\n"
-					 + "* Call us at the Digi Helpline: \n\n 016-2211-800");
-	}
+//	if(currentTime>=10 && currentTime<=21) {//Between 10am-9pm, show livechat button
+//		session.send("* Talk to us on Twitter : \n\n https://twitter.com/mydigi \n\n"
+//					 + "* Call us at the Digi Helpline: \n\n 016-2211-800 \n\n"
+//					 + "* Chat with our Human Agent");
+//      var respCards = new builder.Message(session)
+//            .attachmentLayout(builder.AttachmentLayout.carousel)
+//            .attachments([
+//                new builder.HeroCard(session)
+//				.buttons([
+//					builder.CardAction.openUrl(session, 'http://new.digi.com.my/webchat', 'Chat with Agent')
+//				])
+//					
+//            ]);
+//		session.send(respCards);		
+//		
+//	} else {
+//		session.send("* Talk to us on Twitter : \n\n https://twitter.com/mydigi \n\n"
+//					 + "* Call us at the Digi Helpline: \n\n 016-2211-800");
+//	}
 }
 
 
@@ -1216,7 +1215,6 @@ bot.dialog('CatchAll', [
 							//case 'Plan-PayAsYouGo':
 							//case 'Plan-MonthlyBilling':
 							//case 'Plan-PayAsYouGo':
-							case 'Plan-Prepaid-Expire':
 							case 'Roaming-Start':
 							case 'Roaming-CallHome':
 							//case 'Plan-Recommendation':
@@ -1229,10 +1227,44 @@ bot.dialog('CatchAll', [
 								ProcessApiAiResponse(session, response);
 								break;
 							// Batch of Intents requiring Feedback
+
+							case 'Apps-Capture':
+							case 'Apps-Capture-Extra-Storage':
+							case 'Apps-Capture-Extra-Storage-FL':
+							case 'Apps-Capture-Storage':
+							case 'Broadband-HowToUse':
+							case 'Broadband-ManageAccount':
+							case 'Broadband-Purchase':
+							case 'Broadband-Quota':
 							case 'Broadband-QuotaDeduction':
+							case 'Broadband-Rewards':
+							case 'Broadband-Rollover':
+							case 'Broadband-StreamFree':
+							case 'Broadband-StreamingContent':
+							case 'Broadband-StreamOnDemand':
+							case 'Broadband-VoIPCall':
 							case 'Broadband-StreamFree':
 							case 'Broadband-StreamOnDemand':
 							case 'Broadband-VoIPCall':
+							case 'Broadband-QuotaDeduction':
+							case 'FAQ-Coverage':
+							case 'FAQ-DigiRewards':
+							case 'FAQ-GadgetSim':
+							case 'FAQ-Internet-Topup':
+							case 'FAQ-Itemized-Bill-Charge':
+							case 'FAQ-Kawan20':
+							case 'FAQ-KawanAddContact':
+							case 'FAQ-KawanFees':
+							case 'FAQ-KawanRates':
+							case 'FAQ-LineBarred':
+							case 'FAQ-Post-Pre-Credit-CarryOver':
+							case 'FAQ-WhatIsLte4G':
+							case 'FAQ-WhatIsVolte':
+							case 'FAQ-Where4gLte':
+							//case 'FAQ-NewDigiPostpaidPlan':// have QuickReply
+							case 'FAQ-InternetRollover':
+							case 'FAQ-CheckInternetRollover':
+							//case 'Roaming-111-Call':	// have QuickReply
 							case 'FAQ-1300-1800-Numbers':
 							case 'FAQ-Account':
 							case 'FAQ-Account-Change':
@@ -1291,6 +1323,20 @@ bot.dialog('CatchAll', [
 							case 'Roaming-Start-LessThan6Months':
 							case 'Roaming-Start-MoreThan6Months':
 							case 'Roaming-Status':
+							case 'Roaming-111Roaming-How':
+							case 'Roaming-111Roaming-How-FL':
+							case 'Roaming-DailyUnlimitedInternet':
+							case 'Roaming-Pass':
+							case 'Roaming-Pass-Availability':
+							case 'Roaming-Pass-Expire':
+							case 'Roaming-Pass-Subscribe':
+							case 'Roaming-Pass-Validity':
+							case 'Roaming-PrepaidAutoRoaming':
+							case 'Roaming-Roam5-10':
+							case 'Roaming-RoamCombo':
+							case 'Roaming-RoamLikeHome-Countries':
+							case 'Roaming-RoamLikeHome-Exclusion':
+							case 'Roaming-RoamLikeHome-For':
 								session.privateConversationData[FeedbackIntent] = response.result.metadata.intentName;
 								ProcessApiAiResponse(session, response);
 								if(response.result.actionIncomplete!=true){

@@ -253,8 +253,8 @@ function ComplainChannels(session) {
 //		session.send(respCards);		
 //		
 //	} else {
-//		session.send("* Talk to us on Twitter : \n\n https://twitter.com/mydigi \n\n"
-//					 + "* Call us at the Digi Helpline: \n\n 016-2211-800");
+		session.send("* Talk to us on Twitter : \n\n https://twitter.com/mydigi \n\n"
+					 + "* Call us at the Digi Helpline: \n\n 016-2211-800");
 //	}
 }
 
@@ -1192,14 +1192,10 @@ bot.dialog('CatchAll', [
 							case 'Chat-smile':
 							case 'Chat-Compliment':
 							case 'Chat-Thanks':
-								session.privateConversationData[FallbackState] = 0;
-								ProcessApiAiAndAddButton(session,response);
-								break;
 							case 'Chat-Complain':
 							case 'Chat-Helpline':
 								session.privateConversationData[FallbackState] = 0;
-								ProcessApiAiResponse(session,response);
-								ComplainChannels(session);
+								ProcessApiAiAndAddButton(session,response);
 								break;
 							case 'Chat-Bye':
 							case 'Chat-Greetings':

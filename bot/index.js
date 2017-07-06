@@ -44,6 +44,7 @@ var FallbackState = 'FallbackState';
 // Recommend State 0=Not recommending
 var PlanRecommendState = 'PlanRecommendState';
 var FeedbackIntent = 'FeedbackIntent';
+var ResponseTime = 'ResponseTime';
 var Recommending = 1;
 var RecommendPrepaidBest = 10;
 var RecommendPrepaidLive = 11;
@@ -148,56 +149,6 @@ bot.on('conversationUpdate', function (message) {
     }
 });
 
-// Wrapper function for logging
-function trackBotEvent(session, description, dialog_state, storeLastMenu) {
-    session.send({ type: 'typing' });   // Send typing to all menu
-
-    // log session.message.address to identify user 
-    //var address = JSON.stringify(session.message.address); session.send("User Address=" + address);
-    //
-    // Result & Sample Data
-    //---------------------
-    // Sample Data - Conversation 1 - Dialog 1
-    //{“id”:”c57nfne1mh9b3leggc”,”channelId”:”emulator”,
-    //”user”:{“id”:”default-user”,”name”:”User”},
-    //”conversation”:{“id”:”meckjg4870nch9ebf”},
-    //”bot”:{“id”:”default-bot”,”name”:”Bot”},
-    //”serviceUrl”:”http://localhost:59711","useAuth":false}
-    //
-    // Sample Data - Conversation 1 - Dialog 2
-    //{“id”:”90fea2l3k140jid8f”,”channelId”:”emulator”, // message.id is different for different dialog. 
-    //”user”:{“id”:”default-user”,”name”:”User”},
-    //”conversation”:{“id”:”meckjg4870nch9ebf”},        // Conversation.id is same for same conversation
-    //”bot”:{“id”:”default-bot”,”name”:”Bot”},
-    //”serviceUrl”:”http://localhost:59711","useAuth":false}    
-
-    if(storeLastMenu==undefined) {
-        session.privateConversationData[LastMenu] = description;
-    }
-// Logging to Database
-//{"command": "update_chat_log",
-//"auth_key": "a6hea2",
-//"chat_id": "abcde12345",
-//"dialog_id":"ateer",
-//"dialog_state":"1",   1:mid/end conversation,  0:start conversation
-//"dialog_type":"text", "Email" / "Phone Num" / etc
-//"dialog_input":"",    "
-//"chat_log": "menu|prepaid"}
-    
-    // @*)(*!)@(*#!@ ) why get local date also need 3 lines of text !)(@*#)(!@*#)()
-//    var d = new Date();
-//    var offset = (new Date().getTimezoneOffset() / 60) * -1;
-//    var nowtime = new Date(d.getTime() + offset).toISOString().replace(/T/, ' ').replace(/\..+/, '');
-    if(session.privateConversationData[DialogId] === undefined) {
-        session.privateConversationData[DialogId] = session.message.address.id;
-    }
-
-	logConversation(session.message.address.conversation.id, 
-					session.privateConversationData[DialogId],
-					dialog_state,"","",
-					session.privateConversationData[LastMenu]);	
-}
-
 function logConversation(conversationId, dialogId, dialogState, dialogType, dialogInput, chatLog) {
     var options = {
         method: 'POST',
@@ -261,6 +212,14 @@ function ComplainChannels(session) {
 
 // Middleware for logging all sent & received messages
 bot.use({
+	
+	// we receive message here
+	botbuilder: function (session, next) {
+		session.privateConversationData[ResponseTime] = Date.now();
+console.log("user typed something " + Date.now());
+		next();
+	},	
+	// we receive message here
     receive: function (event, next) {
 		if(DebugLoggingOn) {
 			console.log('Log:User [' + event.address.conversation.id + '] Typed[' + JSON.stringify(event) + ']');
@@ -303,6 +262,18 @@ bot.use({
     }
 });
 
+function LogResponseTime(session) {
+	var initialtime = session.privateConversationData[ResponseTime];
+
+	if(initialtime>0) {
+		var responseTime = Date.now() - initialtime;
+		logConversation(session.message.address.conversation.id, 0/*Dialog ID*/,responseTime/*Dialog State*/,
+						"ResponseTime"/*Dialog Type*/, ""/*Dialog Input*/,"");	
+		session.privateConversationData[ResponseTime] = 0;
+	}
+}
+
+
 // R - menu
 bot.dialog('intro', [
     function (session) {
@@ -310,6 +281,7 @@ bot.dialog('intro', [
 		session.privateConversationData[PlanRecommendState] = 0;	// are we recommending something?
 		session.privateConversationData[DialogId] = session.message.address.id;
 		session.privateConversationData[FallbackState] = 0;			// how many times user type unknown stuff?
+		session.privateConversationData[ResponseTime] = 0;			// Track the response time
 
         session.send('Hi, I\'m Will, your MyDigi Assistant.');
 		session.send('Ask me about plans, roaming and stuff about your account. eg."*What is infinite?*"');
@@ -335,35 +307,6 @@ bot.dialog('logging-off', [
     matches: /^(chinyankeat off)$/i
 });
 
-bot.dialog('getBotFeedback', [
-    function (session) {
-        builder.Prompts.choice(session, emoji.emojify("We would appreciate your feedback. How would you rate our Virtual Assistant? \n(1)not able to help me, (5)very useful"), emoji.emojify('★|★★|★★★|★★★★|★★★★★'), { listStyle: builder.ListStyle.button });
-    },
-    function (session, results) {
-        switch (results.response.index) {
-            case 0:
-                trackBotEvent(session,session.privateConversationData[LastMenu]+'|Feedback 1',1,0);
-                break;
-            case 1:
-                trackBotEvent(session,session.privateConversationData[LastMenu]+'|Feedback 2',1,0);
-                break;
-            case 2:
-                trackBotEvent(session,session.privateConversationData[LastMenu]+'|Feedback 3',1,0);
-                break;
-            case 3:
-                trackBotEvent(session,session.privateConversationData[LastMenu]+'|Feedback 4',1,0);
-                break;
-            case 4:
-                trackBotEvent(session,session.privateConversationData[LastMenu]+'|Feedback 5',1,0);
-                break;
-            default:
-                session.send("Please help to rate me 1~5 above");
-                break;
-        }
-        session.send('Thank you for your feedback');
-        session.replaceDialog('menu');
-    }
-])
 
 bot.dialog('getFeedbackPlan', [
     function (session) {
@@ -1344,11 +1287,13 @@ bot.dialog('CatchAll', [
 								session.replaceDialog(response.result.metadata.intentName, response);
 								break;
 						}
+						LogResponseTime(session);
 						return;
 					} catch (e) {
 						console.log("CatchAll: API.ai Intent [" + response.result.metadata.intentName + ']');
 						//console.log("CatchAll: object [" + JSON.stringify(response.result) + ']');
 						ProcessApiAiResponse(session, response);
+						LogResponseTime(session);
 					}
 				}
 			});
@@ -1356,6 +1301,7 @@ bot.dialog('CatchAll', [
 				console.log('API.AI error:'+error);
 				apiai_error_timeout = Date.now() + process.env.APIAI_ERROR_TIMEOUT*1000;	// Do not use NLP for the next 1 day
 				session.send("Let's get back to our chat on Digi");
+				LogResponseTime(session);
 			});
 
 		} else {

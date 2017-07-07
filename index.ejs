@@ -230,7 +230,7 @@
 				
 				// display offline page, all the time
 				// EXCEPT display BOT in 9pm-10pm in April 2017
-				if(now.getHours()<21) {         //WHITELIST 9pm-12pm for chatbot                
+				if(now.getHours()<=21 && now.getHours()>=10) {         //Between 10am~9pm, redirect to WebChat                
 					<%if (process.env.DEVELOPMENT !== '1') { %>
 						window.location.replace("http://new.digi.com.my/webchat");
 					<% } %>

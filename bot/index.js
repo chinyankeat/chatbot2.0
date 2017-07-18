@@ -309,142 +309,142 @@ bot.dialog('logging-off', [
 
 
 bot.dialog('getFeedbackPlan', [
-    function (session) {
-		var respCards = new builder.Message(session)
-			.text("Was I able to help you?")
-			.suggestedActions(
-				builder.SuggestedActions.create(
-					session,[
-						builder.CardAction.imBack(session, "Yes", "Yes"),
-						builder.CardAction.imBack(session, "No", "No")
-					]
-				)
-			);
-        builder.Prompts.choice(session, respCards, "Yes|No");
-	}
-	,function(session, results) {
-		var PlanRecommended = "";
-		switch (session.privateConversationData[PlanRecommendState]) {
-			case RecommendPrepaidBest: 
-				PlanRecommended = "Recommend Prepaid Best";
-				break;
-			case RecommendPrepaidLive:
-				PlanRecommended = "Recommend Prepaid Live";
-				break;
-			case RecommendPostpaidInfinite:
-				PlanRecommended = "Recommend Postpaid Infinite 150";
-				break;
-			case RecommendPostpaid110:
-				PlanRecommended = "Recommend Postpaid 110";
-				break;
-			case RecommendPostpaid80:
-				PlanRecommended = "Recommend Postpaid 80";
-				break;
-			case RecommendPostpaid50:
-				PlanRecommended = "Recommend Postpaid 50";
-				break;
-			case RecommendPostpaidInfinite110:
-				PlanRecommended = "Recommend Postpaid Infinite & Postpaid 110";
-				break;
-			case RecommendPostpaidSocialMedia:
-			default:
-				break;
-		}
-		
-		switch (results.response.index) {
-			case 0:	// Yes
-				logConversation(session.message.address.conversation.id, 0/*Dialog ID*/,0/*Dialog State*/,
-								"Feedback"/*Dialog Type*/, PlanRecommended/*Dialog Input*/,"Yes");
-				session.send("Always good to know :D");
-
-				// Add in tips after yes / no
-				var request = apiai_app.textRequest("Tips", {
-					sessionId: session.message.address.conversation.id
-				});
-				request.end();
-				request.on('response', function(response) {
-					ProcessApiAiResponse(session, response);
-				});
-
-				break;
-			case 1:	// No
-				logConversation(session.message.address.conversation.id, 0/*Dialog ID*/,0/*Dialog State*/,
-								"Feedback"/*Dialog Type*/, PlanRecommended/*Dialog Input*/,"No");
-				var respCards = new builder.Message(session)
-					.text("Would you like to try again?")
-					.suggestedActions(
-						builder.SuggestedActions.create(
-							session,[
-								builder.CardAction.imBack(session, "Yes", "Yes"),
-								builder.CardAction.imBack(session, "No", "No")
-							]
-						)
-					);
-				builder.Prompts.choice(session, respCards, "Yes|No");
-				break;
-			default:
-				break;
-		}
-    }
-	,function(session, results) {
-		switch (results.response.index) {
-			case 0:	// Yes
-				if (session.privateConversationData[PlanRecommendState]) {
-					session.replaceDialog('Plan-Recommendation');
-				}
-				break;
-			case 1:	// No
-				session.send("Alright. Can I help you with anything else?");
-				session.endDialog();
-				break;
-			default:
-				break;
-		}			
-    }
+//    function (session) {
+//		var respCards = new builder.Message(session)
+//			.text("Was I able to help you?")
+//			.suggestedActions(
+//				builder.SuggestedActions.create(
+//					session,[
+//						builder.CardAction.imBack(session, "Yes", "Yes"),
+//						builder.CardAction.imBack(session, "No", "No")
+//					]
+//				)
+//			);
+//        builder.Prompts.choice(session, respCards, "Yes|No");
+//	}
+//	,function(session, results) {
+//		var PlanRecommended = "";
+//		switch (session.privateConversationData[PlanRecommendState]) {
+//			case RecommendPrepaidBest: 
+//				PlanRecommended = "Recommend Prepaid Best";
+//				break;
+//			case RecommendPrepaidLive:
+//				PlanRecommended = "Recommend Prepaid Live";
+//				break;
+//			case RecommendPostpaidInfinite:
+//				PlanRecommended = "Recommend Postpaid Infinite 150";
+//				break;
+//			case RecommendPostpaid110:
+//				PlanRecommended = "Recommend Postpaid 110";
+//				break;
+//			case RecommendPostpaid80:
+//				PlanRecommended = "Recommend Postpaid 80";
+//				break;
+//			case RecommendPostpaid50:
+//				PlanRecommended = "Recommend Postpaid 50";
+//				break;
+//			case RecommendPostpaidInfinite110:
+//				PlanRecommended = "Recommend Postpaid Infinite & Postpaid 110";
+//				break;
+//			case RecommendPostpaidSocialMedia:
+//			default:
+//				break;
+//		}
+//		
+//		switch (results.response.index) {
+//			case 0:	// Yes
+//				logConversation(session.message.address.conversation.id, 0/*Dialog ID*/,0/*Dialog State*/,
+//								"Feedback"/*Dialog Type*/, PlanRecommended/*Dialog Input*/,"Yes");
+//				session.send("Always good to know :D");
+//
+//				// Add in tips after yes / no
+//				var request = apiai_app.textRequest("Tips", {
+//					sessionId: session.message.address.conversation.id
+//				});
+//				request.end();
+//				request.on('response', function(response) {
+//					ProcessApiAiResponse(session, response);
+//				});
+//
+//				break;
+//			case 1:	// No
+//				logConversation(session.message.address.conversation.id, 0/*Dialog ID*/,0/*Dialog State*/,
+//								"Feedback"/*Dialog Type*/, PlanRecommended/*Dialog Input*/,"No");
+//				var respCards = new builder.Message(session)
+//					.text("Would you like to try again?")
+//					.suggestedActions(
+//						builder.SuggestedActions.create(
+//							session,[
+//								builder.CardAction.imBack(session, "Yes", "Yes"),
+//								builder.CardAction.imBack(session, "No", "No")
+//							]
+//						)
+//					);
+//				builder.Prompts.choice(session, respCards, "Yes|No");
+//				break;
+//			default:
+//				break;
+//		}
+//    }
+//	,function(session, results) {
+//		switch (results.response.index) {
+//			case 0:	// Yes
+//				if (session.privateConversationData[PlanRecommendState]) {
+//					session.replaceDialog('Plan-Recommendation');
+//				}
+//				break;
+//			case 1:	// No
+//				session.send("Alright. Can I help you with anything else?");
+//				session.endDialog();
+//				break;
+//			default:
+//				break;
+//		}			
+//    }
 ]).triggerAction({
     matches: /(getFeedbackPlan)/i
 });
 
 bot.dialog('getFeedbackGeneral', [
-    function (session) {
-		var respCards = new builder.Message(session)
-			.text("Was I able to help you?")
-			.suggestedActions(
-				builder.SuggestedActions.create(
-					session,[
-						builder.CardAction.imBack(session, "Yes", "Yes"),
-						builder.CardAction.imBack(session, "No", "No")
-					]
-				)
-			);
-        builder.Prompts.choice(session, respCards, "Yes|No", { maxRetries:MaxRetries_SingleMenu });
-	}
-	,function(session, results) {
-		switch (results.response.index) {
-			case 0:	// Yes
-				session.send("Always good to know :D");
-				logConversation(session.message.address.conversation.id, 0/*Dialog ID*/,0/*Dialog State*/,
-								"Feedback"/*Dialog Type*/, session.privateConversationData[FeedbackIntent]/*Dialog Input*/,"Yes");
-				
-				// Add in tips after yes / no
-				var request = apiai_app.textRequest("Tips", {
-					sessionId: session.message.address.conversation.id
-				});
-				request.end();
-				request.on('response', function(response) {
-					ProcessApiAiResponse(session, response);
-				});
-				break;
-			case 1:	// No
-				session.send("Thanks for your feedback. We will improve on this");
-				logConversation(session.message.address.conversation.id, 0/*Dialog ID*/,0/*Dialog State*/,
-								"Feedback"/*Dialog Type*/, session.privateConversationData[FeedbackIntent]/*Dialog Input*/,"No");
-				break;
-			default:
-				session.send("Can I help you with anything else?");
-				break;
-		}
-    }
+//    function (session) {
+//		var respCards = new builder.Message(session)
+//			.text("Was I able to help you?")
+//			.suggestedActions(
+//				builder.SuggestedActions.create(
+//					session,[
+//						builder.CardAction.imBack(session, "Yes", "Yes"),
+//						builder.CardAction.imBack(session, "No", "No")
+//					]
+//				)
+//			);
+//        builder.Prompts.choice(session, respCards, "Yes|No", { maxRetries:MaxRetries_SingleMenu });
+//	}
+//	,function(session, results) {
+//		switch (results.response.index) {
+//			case 0:	// Yes
+//				session.send("Always good to know :D");
+//				logConversation(session.message.address.conversation.id, 0/*Dialog ID*/,0/*Dialog State*/,
+//								"Feedback"/*Dialog Type*/, session.privateConversationData[FeedbackIntent]/*Dialog Input*/,"Yes");
+//				
+//				// Add in tips after yes / no
+//				var request = apiai_app.textRequest("Tips", {
+//					sessionId: session.message.address.conversation.id
+//				});
+//				request.end();
+//				request.on('response', function(response) {
+//					ProcessApiAiResponse(session, response);
+//				});
+//				break;
+//			case 1:	// No
+//				session.send("Thanks for your feedback. We will improve on this");
+//				logConversation(session.message.address.conversation.id, 0/*Dialog ID*/,0/*Dialog State*/,
+//								"Feedback"/*Dialog Type*/, session.privateConversationData[FeedbackIntent]/*Dialog Input*/,"No");
+//				break;
+//			default:
+//				session.send("Can I help you with anything else?");
+//				break;
+//		}
+//    }
 ]);
 
 

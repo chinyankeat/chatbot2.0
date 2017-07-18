@@ -56,14 +56,13 @@ function timerIncrement() {
     if (feedbackIdleTime >= feedbackPopupTimer) { // Popup after certain timer
 		if(!feedbackPopupShown) {
 			feedbackPopupShown++;
-			$("#wc-popup-feedback").fadeIn(150);
+//			$("#wc-popup-feedback").fadeIn(150);	// Temporary disable this feedback
 			clearInterval(idleInterval);			
 		}
     }
 }
 
 function submitFeedback() {
-//	alert("form submitted =" +$("#popup-feedback-stars :radio:checked").val() + " text="+ $("#popup-feedback-remark").val());
 	if ($("#popup-feedback-stars :radio:checked").val() == undefined ) {
 		$('#popup-feedback-comment').text("Please help to rate us");
 		return;

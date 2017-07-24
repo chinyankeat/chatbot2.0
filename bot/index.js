@@ -286,6 +286,15 @@ bot.dialog('intro', [
         session.send('Hi, I\'m Will, your Digi Virtual Assistant.');
 		session.send('Ask me about plans, roaming and stuff about your account. eg."*What is infinite?*"');
 		session.send('How may I help you today? ');
+		
+		var request = apiai_app.textRequest("Let's Start", {
+			sessionId: session.message.address.conversation.id
+		});
+		request.end();
+
+		request.on('response', function(response) {
+			ProcessApiAiResponse(session, response);
+		});		
     }
 ]);
 
@@ -525,7 +534,7 @@ bot.dialog('Plan-PayAsYouGo', [
 					return;
 			}
 		}
-		session.replaceDialog('getFeedbackPlan');
+//		session.replaceDialog('getFeedbackPlan');
     }
 ]).triggerAction({
     matches: /(Pay as you go)/i
@@ -621,7 +630,7 @@ bot.dialog('Plan-MonthlyBilling', [
 					return;
 			}
 		}
-		session.replaceDialog('getFeedbackPlan');
+//		session.replaceDialog('getFeedbackPlan');
     }
 ]).triggerAction({
     matches: /(Monthly Billing)/i
@@ -670,7 +679,7 @@ bot.dialog('Plan-RecommendPlanByStreaming', [
 				session.replaceDialog('Plan-RecommendPlanBySocialMedia');
 				return;
 		}
-		session.replaceDialog('getFeedbackPlan');
+//		session.replaceDialog('getFeedbackPlan');
     }
 ]);
 	
@@ -727,7 +736,7 @@ bot.dialog('Plan-RecommendPlanBySocialMedia', [
 					break;
 			}
 		}
-		session.replaceDialog('getFeedbackPlan');
+//		session.replaceDialog('getFeedbackPlan');
     }
 ]);
 
@@ -809,7 +818,7 @@ bot.dialog('Roaming-General', [
 				} else {
 					session.send(args.result.fulfillment.speech);
 				}
-				session.replaceDialog("getFeedbackGeneral");
+//				session.replaceDialog("getFeedbackGeneral");
 			}
 		}
     }
@@ -1150,141 +1159,23 @@ bot.dialog('CatchAll', [
 							case 'Default-Unknown':
 							case 'FAQ-Bill-Payment': 
 							case 'FAQ-Minimum-Topup':
-							//case 'Plan-MonthlyBilling':
-							//case 'Plan-PayAsYouGo':
-							//case 'Plan-MonthlyBilling':
-							//case 'Plan-PayAsYouGo':
 							case 'Roaming-Start':
 							case 'Roaming-CallHome':
-							//case 'Plan-Recommendation':
-							//case 'Plan-RecommendPlanBySocialMedia':
-							//case 'Plan-RecommendPlanByStreaming':
-
-							//case 'Roaming-Start':
 							case 'Tips':
 								session.privateConversationData[FallbackState] = 0;
 								ProcessApiAiResponse(session, response);
 								break;
-							// Batch of Intents requiring Feedback
-
-							case 'Apps-Capture':
-							case 'Apps-Capture-Extra-Storage':
-							case 'Apps-Capture-Extra-Storage-FL':
-							case 'Apps-Capture-Storage':
-							case 'Broadband-HowToUse':
-							case 'Broadband-ManageAccount':
-							case 'Broadband-Purchase':
-							case 'Broadband-Quota':
-							case 'Broadband-QuotaDeduction':
-							case 'Broadband-Rewards':
-							case 'Broadband-Rollover':
-							case 'Broadband-StreamFree':
-							case 'Broadband-StreamingContent':
-							case 'Broadband-StreamOnDemand':
-							case 'Broadband-VoIPCall':
-							case 'Broadband-StreamFree':
-							case 'Broadband-StreamOnDemand':
-							case 'Broadband-VoIPCall':
-							case 'Broadband-QuotaDeduction':
-							case 'FAQ-Coverage':
-							case 'FAQ-DigiRewards':
-							case 'FAQ-GadgetSim':
-							case 'FAQ-Internet-Topup':
-							case 'FAQ-Itemized-Bill-Charge':
-							case 'FAQ-Kawan20':
-							case 'FAQ-KawanAddContact':
-							case 'FAQ-KawanFees':
-							case 'FAQ-KawanRates':
-							case 'FAQ-LineBarred':
-							case 'FAQ-Post-Pre-Credit-CarryOver':
-							case 'FAQ-WhatIsLte4G':
-							case 'FAQ-WhatIsVolte':
-							case 'FAQ-Where4gLte':
-							//case 'FAQ-NewDigiPostpaidPlan':// have QuickReply
-							case 'FAQ-InternetRollover':
-							case 'FAQ-CheckInternetRollover':
-							//case 'Roaming-111-Call':	// have QuickReply
-							case 'FAQ-1300-1800-Numbers':
-							case 'FAQ-Account':
-							case 'FAQ-Account-Change':
-							case 'FAQ-Add-FnF':
-							case 'FAQ-Buddyz-Charge':
-							case 'FAQ-Change-Billing-Cycle':
-							case 'FAQ-Connect-ID':
-							case 'FAQ-How-FnF':
-							case 'FAQ-Minimum-Topup-ReloadNow':
-							case 'FAQ-Mydigi':
-							case 'FAQ-MyDigi-Download-Bill':
-							case 'FAQ-MyDigi-Pay-For-Other':
-							case 'FAQ-PUK-Code':
-							case 'FAQ-Talk-Time-Transfer':
-							case 'Find-A-Store':
-							case 'IDD-CallFail':
-							case 'MyDigi-Intro':
-							case 'MyDigi-Notification':
-							case 'MyDigi-Reload':
-							case 'Plan-Autobilling':
-							case 'Plan-AutoReload':
-							case 'Plan-Buddyz':
-							case 'Plan-Business':
-							case 'Plan-CancelAutobilling':
-							case 'Plan-ChangePostpaidToPrepaid':
-							case 'Plan-ChangePrepaidToPostpaid':
-							case 'Plan-Cheapest-BestValue':
-							case 'Plan-Competitor':
-							case 'Plan-Family':
-							case 'Plan-Fastest':
-							case 'Plan-HappyHour':
-							case 'Plan-HighTier-Over100':
-							case 'Plan-Infinite':
-							case 'Plan-Latest':
-							case 'Plan-MinimumReload':
-							case 'Plan-MobileNumOwnership':
-							case 'Plan-PortIn':
-							case 'Plan-Prepaid-Best':
-							case 'Plan-Prepaid-Expire':
-							case 'Plan-Prepaid-Live':
-							case 'Plan-Cheapest-BestValue':
-							case 'Plan-Fastest':
-							case 'Plan-HighTier-Over100':
-							case 'Plan-Infinite':
-							case 'Plan-MinimumReload':
-							case 'Plan-SpecialNumber':
-							case 'Roaming-ActivateForOthers':
-							case 'Roaming-ActivateWhileAbroad':
-							case 'Roaming-CallFromOverseas':
-							case 'Roaming-CallHome-FromMalaysia':
-							case 'Roaming-CallHome-FromOtherCountries':
-							case 'Roaming-General':
-							case 'Roaming-IncreaseCreditLimit':
-							case 'Roaming-RoamLikeHome':
-							case 'Roaming-SharingData':
-							case 'Roaming-Start-LessThan6Months':
-							case 'Roaming-Start-MoreThan6Months':
-							case 'Roaming-Status':
-							case 'Roaming-111Roaming-How':
-							case 'Roaming-111Roaming-How-FL':
-							case 'Roaming-DailyUnlimitedInternet':
-							case 'Roaming-Pass':
-							case 'Roaming-Pass-Availability':
-							case 'Roaming-Pass-Expire':
-							case 'Roaming-Pass-Subscribe':
-							case 'Roaming-Pass-Validity':
-							case 'Roaming-PrepaidAutoRoaming':
-							case 'Roaming-Roam5-10':
-							case 'Roaming-RoamCombo':
-							case 'Roaming-RoamLikeHome-Countries':
-							case 'Roaming-RoamLikeHome-Exclusion':
-							case 'Roaming-RoamLikeHome-For':
-								session.privateConversationData[FeedbackIntent] = response.result.metadata.intentName;
-								ProcessApiAiResponse(session, response);
-								if(response.result.actionIncomplete!=true){
-									session.replaceDialog("getFeedbackGeneral");
-								}
-								break;
-							default:
+							case 'Plan-MonthlyBilling':
+							case 'Plan-PayAsYouGo':
+							case 'Plan-Recommendation':
+							case 'Plan-RecommendPlanBySocialMedia':
+							case 'Plan-RecommendPlanByStreaming':								
 								session.privateConversationData[FallbackState] = 0;
 								session.replaceDialog(response.result.metadata.intentName, response);
+								break;								
+							default:
+								session.privateConversationData[FeedbackIntent] = response.result.metadata.intentName;
+								ProcessApiAiResponse(session, response);
 								break;
 						}
 						LogResponseTime(session);

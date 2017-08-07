@@ -10,145 +10,34 @@
     </head>
     <body style="background:#fd0 url('http://new.digi.com.my/cs/site_template/digi/images/digi-pattern.png');">			
 
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+				
+		<!-- This div is to prompt for password before starting bot -->
+<!--
+		<div class="password-container" id="passwordcontainer">
+			<div class="password-wrapper">
+				<h3 class="password-form-signin-heading">Please Sign In</h3>
+
+				<div>
+					<input id="username" type="text" class="password-form-control" name="Username" placeholder="Username" required="" autofocus="" />
+				</div>
+				<div>
+					<input id="password" type="password" class="password-form-control" name="Password" placeholder="Password" required="" />
+				</div>
+
+				<div>
+					<button id="login_submit" class="wc-popup-button" type="button">Login</button> 
+					<button id="login_cancel" class="wc-popup-button" type="button">Cancel</button> 
+				</div>
 
 
-
-<!-- Remove for Production -->
-<style type="text/css">
-.password-container {
-  z-index: 2;
-  height: 100%;
-  width: 100%;
-  background-color: #fd0;	
-  text-align: center;
-  position: fixed;
-  margin: -8px;
-}
-	.password-wrapper {
-	  z-index: 3;
-	  height: 300px;
-	  width: 360px;
-	  top: 50%;
-	  left: 50%;
-	  margin-top: -150px;
-	  margin-left: -180px;
-	  background-color: #ffffff;	
-	  box-shadow: 1px 2px 10px rgba(100, 100, 100, .3);
-	  position:fixed;
-	  font-family: 'Roboto', sans-serif;
-	  text-align: center;
-	  font-size: 23px;
-	}
-	.password-form-control {
-		position: relative;
-		font-size: 16px;
-		padding: 10px;
-		float: left;
-		margin-left: 22px;
-		width: 300px;
-	}
-</style>
-	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-
-    <div class="password-container" id="passwordcontainer">
-        <div class="password-wrapper">
-            <h3 class="password-form-signin-heading">Please Sign In</h3>
-
-			<div>
-            	<input id="username" type="text" class="password-form-control" name="Username" placeholder="Username" required="" autofocus="" />
 			</div>
-			<div>
-				<input id="password" type="password" class="password-form-control" name="Password" placeholder="Password" required="" />
-			</div>
-
-			<div>
-				<button id="login_submit" class="wc-popup-button" type="button">Login</button> 
-				<button id="login_cancel" class="wc-popup-button" type="button">Cancel</button> 
-			</div>
-            
-            
-        </div>
-    </div>
-    <script type="text/javascript">
-        $(function () {
-
-            $("#login_submit").on("click", function () {
-                verify_login($("#username").val(), $("#password").val());
-            });
-            $("#login_cancel").on("click", function () {
-				window.location.replace("http://www.digi.com.my");  
-            });
-
-            function verify_login(username,password) {
-                command = {};
-                command["command"] = "bot_user_login";
-                command["username"] = username;
-                command["password"] = password
-
-                $.ajax({
-                    type: "POST",
-                    url: 'https://digibid.azurewebsites.net/action.ashx?action=json',
-                    data: {
-                        data: JSON.stringify(command)
-                    },
-                    cache: false,
-                    async: true,
-                    timeout: 10000,
-                    success: function (data) {
-                        if (data.results.status == '0') {
-							$("#passwordcontainer").hide();
-
-							var form = new FormData();
-							form.append("data", "{\"command\": \"update_chat_log\",\"auth_key\": \"a6hea2\",\"chat_id\": \"login\",\n\"dialog_id\":\"login-success\",\"dialog_state\":\"1\",\"dialog_type\":\"text\",\"dialog_input\":\"\",\"chat_log\": \"username:"+username+"\"}");
-
-							var settings = {
-							  "async": true,
-							  "url": "https://digibid.azurewebsites.net/action.ashx?action=json",
-							  "method": "POST",
-							  "processData": false,
-							  "contentType": false,
-							  "mimeType": "multipart/form-data",
-							  "data": form
-							}
-							$.ajax(settings).done(function (response) {
-							  console.log(response);
-							});								
-							
-                        } else {
-							var form = new FormData();
-							form.append("data", "{\"command\": \"update_chat_log\",\"auth_key\": \"a6hea2\",\"chat_id\": \"login\",\n\"dialog_id\":\"login-fail\",\"dialog_state\":\"1\",\"dialog_type\":\"text\",\"dialog_input\":\"\",\"chat_log\": \"username:"+username+"\"}");
-
-							var settings = {
-							  "async": true,
-							  "url": "https://digibid.azurewebsites.net/action.ashx?action=json",
-							  "method": "POST",
-							  "processData": false,
-							  "contentType": false,
-							  "mimeType": "multipart/form-data",
-							  "data": form
-							}						
-							$.ajax(settings).done(function (response) {
-							  console.log(response);
-							});
-                            alert("Wrong Username OR password");
-							window.location.replace("http://www.digi.com.my");
-						}
-                    },
-                    error: function (data) {
-						window.location.replace("http://www.digi.com.my");
-					}
-                });
-            }
-
-        });
-    </script>   
-<!-- Remove for Production -->
-
-
-
-
-
-
+		</div>
+		<script>
+			/*Uncomment the next line to display password*/
+			document.getElementById("passwordcontainer").style.zIndex = "2";
+		</script>
+-->
 
 		<div id="wc-popup-url" class="wc-popup">
 			<div class="wc-popup-window">

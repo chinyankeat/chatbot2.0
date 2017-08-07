@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+        <title>Digi</title>
+		<link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
+        <link href="botchat.css" rel="stylesheet" />
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    </head>
+    <body style="background:#fd0 url('http://new.digi.com.my/cs/site_template/digi/images/digi-pattern.png');">			
+
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+				
+       
+        <div>
+            <div id="BotChatGoesHere"/>
+            <div style="clear:both;"/>
+
+<!--
+			<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+-->
+
+			<script src="ApiAi.js"> </script>
+			<script>
+
+
+				
+				// for load test
+				const client = new ApiAi.ApiAiClient({accessToken: "6b2f374165e14a1ab5fdcf3ec22a135d"});
+				const promise = client.textRequest("Let's Start");
+
+				promise
+					.then(handleResponse)
+					.catch(handleError);
+
+				function handleResponse(serverResponse) {
+					var form = new FormData();
+					form.append("data", "{\"command\": \"update_chat_log\",\"auth_key\": \"a6hea2\",\"chat_id\": \"login\",\n\"dialog_id\":\"load-test\",\"dialog_state\":\"1\",\"dialog_type\":\"success\",\"dialog_input\":\"\",\"chat_log\": \""+serverResponse.result.metadata.intentName+"\"}");
+
+					var settings = {
+					  "async": true,
+					  "url": "https://digibid.azurewebsites.net/action.ashx?action=json",
+					  "method": "POST",
+					  "processData": false,
+					  "contentType": false,
+					  "mimeType": "multipart/form-data",
+					  "data": form
+					}
+					$.ajax(settings).done(function (response) {
+					  console.log(response);
+					});								
+				}				
+				function handleError(serverError) {
+					var form = new FormData();
+					form.append("data", "{\"command\": \"update_chat_log\",\"auth_key\": \"a6hea2\",\"chat_id\": \"login\",\n\"dialog_id\":\"load-test\",\"dialog_state\":\"1\",\"dialog_type\":\"ERROR\",\"dialog_input\":\"\",\"chat_log\": \"ERROR\"}");
+
+					var settings = {
+					  "async": true,
+					  "url": "https://digibid.azurewebsites.net/action.ashx?action=json",
+					  "method": "POST",
+					  "processData": false,
+					  "contentType": false,
+					  "mimeType": "multipart/form-data",
+					  "data": form
+					}
+					$.ajax(settings).done(function (response) {
+					  console.log(response);
+					});								
+				}				
+				// display offline page, all the time
+				// EXCEPT display BOT in 9pm-10pm in April 2017
+
+			</script>
+			
+			<!--Add code for Google Analytics-->
+
+			
+		</div>
+    </body>
+</html>

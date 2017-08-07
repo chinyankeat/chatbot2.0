@@ -26,7 +26,12 @@ app.post('/', (req, res) => {
 
 app.get('/', (req, res) => {
     const appSecret = (req.cookies.settings && req.cookies.settings.secret) || process.env.APP_SECRET;
-    const endpoint = 'https://asia.directline.botframework.com/v3/directline/tokens/generate';
+    const endpoint_asia = 'https://asia.directline.botframework.com/v3/directline/tokens/generate';
+	const endpoint_us = 'https://directline.botframework.com/v3/directline/tokens/generate';
+	var endpoint = endpoint_asia;
+	if(process.env.DIRECTLINE_REGION=='US') {
+		endpoint = endpoint_us;
+	}
     const auth = 'Bearer';
 	///////////////////////////////////////////////////
 	// code for load test

@@ -11,6 +11,24 @@ var botInteraction = 0;	// current interactions
 var feedbackPopupShown = 0;			// Has we popup dialog before? 0=no, 1=yes
 var feedbackPopupInteraction = 20;	// popup after 15 interactions
 var feedbackPopupTimer = 40;		// popup after 60 seconds idle
+
+// Counters for Typing Timer
+var typingTimerHandler = 0;	// store callback function for Typing Timer
+var typingTimer = 0;			// how long we have typing ...? 
+var currentBotText = "Let's Start";
+
+var variable_1 = 0;
+var variable_2 = 0;
+var variable_3 = 0;
+var variable_4 = 0;
+var variable_5 = 0;
+var variable_6 = 0;
+var variable_7 = 0;
+var variable_8 = 0;
+var variable_9 = 0;
+var variable_10 = 0;
+
+
 $( document ).ready(function() {
 	// function to popup feedback menu
 	//Zero the idle timer on mouse movement.
@@ -21,6 +39,9 @@ $( document ).ready(function() {
         feedbackIdleTime = 0;
     });
 	
+	// timer for typing
+	typingTimerHandler = setInterval(typingTimerCallback, 1000); // 6 second		
+
 	
 	// function to handle password screen
 	$("#login_submit").on("click", function () {
@@ -30,6 +51,44 @@ $( document ).ready(function() {
 		window.location.replace("http://www.digi.com.my");  
 	});	
 });
+
+function typingTimerCallback() {
+	if(typingTimer>0) {
+		var elapsedTime = (Date.now() - typingTimer)/1000;
+		if(elapsedTime>10) {	// Elapsed more than 10 seconds
+			if(currentBotText == "Let's Start") {
+				cancelTypingTimer();
+				location.reload(true);
+			} else {
+				cancelTypingTimer();
+//				$("#wc-resend-message").trigger( "click");	// this will trigger bot to resend the last message
+
+				var dotdotdot = document.getElementById('wc-loading-container-id');
+				if(dotdotdot){
+					dotdotdot.parentNode.removeChild(dotdotdot);
+				}
+
+				// this code replaces child, but it will disappear if new text typed. 
+//				var dotdotdot = document.getElementById("wc-loading-container-id");
+//				if(dotdotdot) {
+//					var typingErrorImg = document.createElement("IMG");
+//					typingErrorImg.className = 'wc-loading-container';
+//					typingErrorImg.setAttribute("src", "http://bot.digi.com.my/images/typingerror.png");
+//					dotdotdot.parentNode.replaceChild(typingErrorImg,dotdotdot);
+//				}
+			}
+		}
+	}
+}
+
+function startTypingTimer() {
+	typingTimer = Date.now();
+}
+
+function cancelTypingTimer() {
+	typingTimer = 0;
+}
+
 
 $('body').keyup(function(e){
     if(e.which == 27){
@@ -43,8 +102,6 @@ $('body.a').on('click',function(){
 //    $(this).attr('href', $(this).attr('href'));
 });
 
-
-// Start Feedback Timer whenever there is user interaction with Bot
 function startFeedbackTimer() {
 	botInteraction++;
 	

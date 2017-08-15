@@ -28,7 +28,7 @@ var tableStorage = new azure.AzureBotStorage({ gzipData: false }, azureTableClie
 // API.ai
 var apiai = require('apiai'); 
 var apiai_app = apiai(process.env.APIAI_CLIENT_ACCESS_TOKEN);
-var ApiAiIntroWebHook = 'Postpaid,what is the postpaid plans|Prepaid,what is the prepaid plans|Change Plan,i want to change plan';
+var ApiAiIntroWebHook = 'Postpaid;Show me Postpaid Plans|Autobilling;What is autobilling?|Internet Sharing;What is internet sharing?|Bill Payment;How can I pay bills?';
 
 
 ////////////////////////////////////////////////////////////////////////////
@@ -44,6 +44,7 @@ var imagedir = 'https://yellowchat.azurewebsites.net';
 var FeedbackIntent = 'FeedbackIntent';
 var ResponseTime = 'ResponseTime';
 var ApiAiQuickReply = 'ApiAiQuickReply';
+var ApiAiButtonPayload = 'ApiAiButtonPayload';
 var Recommending = 1;
 var RecommendPrepaidBest = 10;
 var RecommendPrepaidLive = 11;
@@ -283,14 +284,15 @@ bot.dialog('intro', [
 		session.privateConversationData[DialogId] = session.message.address.id;
 		session.privateConversationData[ResponseTime] = 0;			// Track the response time
 		session.privateConversationData[ApiAiQuickReply] = 0;		// store Api.ai Quick Reply Payload
+		session.privateConversationData[ApiAiButtonPayload] = 0;		// store Api.ai Quick Reply Payload
 		var request = apiai_app.textRequest("Let's Start", {
 			sessionId: session.message.address.conversation.id
 		});
 		request.end();
 
 		request.on('response', function(response) {
-			ProcessApiAiResponse(session, response);
-		});		
+			ProcessApiAiResponse(session, response, 1);
+		});
     }
 ]);
 
@@ -778,19 +780,6 @@ bot.dialog('Default-Unknown', [
 //    }
 //]);
 
-bot.dialog('Start-Over', [
-    function (session) {
-		var request = apiai_app.textRequest("Cancel", {
-			sessionId: session.message.address.conversation.id
-		});
-		request.end();
-		session.send("Alright. Let's start over");
-		session.send('\n\n Ask me about plans, roaming and stuff about your account. eg." What is infinite?"');
-		session.send('How may I help you today? ');
-    }
-]).triggerAction({
-    matches: /(Start Over).*|(Cancel).*/i
-});
 
 bot.dialog('printenv', [
     function (session) {
@@ -843,9 +832,9 @@ function ProcessApiAiResponseIntro(session, response) {
 								builder.CardAction.imBack(session, QuickReplyTitle, QuickReplyTitle));
 						}
 						if(ApiAiQuickReplyTextPayload.length>0) {
-							ApiAiQuickReplyTextPayload += '|' + QuickReplyTitle + ',' + QuickReplyPayload;
+							ApiAiQuickReplyTextPayload += '|' + QuickReplyTitle + ';' + QuickReplyPayload;
 						} else {
-							ApiAiQuickReplyTextPayload += QuickReplyTitle + ',' + QuickReplyPayload;
+							ApiAiQuickReplyTextPayload += QuickReplyTitle + ';' + QuickReplyPayload;
 						}
 					}
 
@@ -882,172 +871,222 @@ function ProcessApiAiResponseIntro(session, response) {
 }
 
 
-function ProcessApiAiResponse(session, response) {
+function ProcessApiAiResponse(session, response, intro=0) {
 	
 	if(DebugLoggingOn) {
 		console.log('API.AI response:'+ JSON.stringify(response));
 		session.send('API.AI response:'+ JSON.stringify(response));
 	}
 	try {
-		var jsonobject = response.result.fulfillment.messages.filter(value=> {return value.platform=='facebook'});
-		if(jsonobject.length>0) {
+		var ApiAiQuickReplyTextPayload = "";
 
-			// We have FB Text
-			var jsonFbText = response.result.fulfillment.messages.filter(value=> {return value.type==0 && value.platform=='facebook'});
-			if(jsonFbText.length>0) {
-				for(idx=0; idx<jsonFbText.length; idx++){
-					if(jsonFbText[idx].speech.length >0) {
-						session.send(jsonFbText[idx].speech);
-					}
-				}
-			}
+		if(response.status.code != 200) {
+			// somehow API.ai has error
+			if(intro==1) {
+				session.send("Hi, I’m Will. I’m a Chatbot in Training. I learn as I talk to you so that I can serve you better in the future. For now, I’ll only be answering questions related to Postpaid.");
 
-			// We have FB Card. Put all cards into carousel
-			var jsonFbCard = response.result.fulfillment.messages.filter(value=> {return value.type==1 && value.platform=='facebook'});
-			var CardAttachments = [];
-			if(jsonFbCard.length>0) {
-				for(idx=0; idx<jsonFbCard.length; idx++){
-					var CardButtons = [];
-					if(jsonFbCard[idx].buttons!=null) {
-						for (idxButton=0; idxButton<jsonFbCard[idx].buttons.length; idxButton++) {
-							// Check if quick reply is it HTTP or normal string
-							wwwLocation = jsonFbCard[idx].buttons[idxButton].postback.search("http");
-							if(wwwLocation>=0){
-								// URL includes http://
-								CardButtons.push(
-									builder.CardAction.openUrl(session, jsonFbCard[idx].buttons[idxButton].postback, jsonFbCard[idx].buttons[idxButton].text));
-							} else {
-								// Button is normal imBack
-								CardButtons.push(
-									builder.CardAction.imBack(session, jsonFbCard[idx].buttons[idxButton].postback, jsonFbCard[idx].buttons[idxButton].text));
-							}
-						}
-						CardAttachments.push(
-							new builder.HeroCard(session)
-							.title(jsonFbCard[idx].title)
-							.text(jsonFbCard[idx].subtitle)
-							.images([ builder.CardImage.create(session, jsonFbCard[idx].imageUrl) ])
-							.buttons(CardButtons)
-						);
-					} else {
-						CardAttachments.push(
-							new builder.HeroCard(session)
-							.title(jsonFbCard[idx].title)
-							.text(jsonFbCard[idx].subtitle)
-							.images([ builder.CardImage.create(session, jsonFbCard[idx].imageUrl) ])
-						);									
-					}
-				}
-			}
-
-			// we have Facebook Quick Reply. Put as quickreply							
-			var jsonFbQuickReply = response.result.fulfillment.messages.filter(value=> {return value.type==2 && value.platform=='facebook'});
-			var QuickReplyButtons = [];
-			var QuickReplyText = "";
-			if(jsonFbQuickReply.length>0) {
-				for(idx=0; idx<jsonFbQuickReply.length; idx++){
-					for (idxQuickReply=0; idxQuickReply<jsonFbQuickReply[idx].replies.length; idxQuickReply++) {
-
-						// Check if we have escape keys
-						var urlLocation = jsonFbQuickReply[idx].replies[idxQuickReply].search('-L');
-						var urlTitle = jsonFbQuickReply[idx].replies[idxQuickReply].substring(0,urlLocation);
-						var urlString = "";
-						var wwwLocation = jsonFbQuickReply[idx].replies[idxQuickReply].search("http");
-						
-						// Add in our predetermined URL
-						if(urlLocation>=0) {
-							var urlReplies = jsonFbQuickReply[idx].replies[idxQuickReply];
-							var selectedUrl = parseInt(urlReplies.substring(urlLocation+2,urlReplies.length)) - 1;
-							if (UrlList.length > selectedUrl) {
-								urlString = UrlList[selectedUrl];
-								QuickReplyButtons.push(
-									builder.CardAction.openUrl(session, urlString, urlTitle));
-							}
-						} else if (wwwLocation>=0){
-							// URL includes http://
-							QuickReplyButtons.push(
-								builder.CardAction.openUrl(session, jsonFbQuickReply[idx].replies[idxQuickReply], jsonFbQuickReply[idx].replies[idxQuickReply]));							
-						} else {
-							QuickReplyButtons.push(
-								builder.CardAction.imBack(session, jsonFbQuickReply[idx].replies[idxQuickReply], jsonFbQuickReply[idx].replies[idxQuickReply]));
-						}
-					}
-				}
-				QuickReplyText = jsonFbQuickReply[0].title;
-			}
-			
-			// We have FB Images			
-			var jsonFbImage = response.result.fulfillment.messages.filter(value=> {return value.type==3 && value.platform=='facebook'});
-			if(jsonFbImage.length>0) {
-				for(idx=0; idx<jsonFbImage.length; idx++){
-					CardAttachments.push(
-						new builder.HeroCard(session)
-						.images([ builder.CardImage.create(session, jsonFbImage[idx].imageUrl) ])
-					);									
-				}
-			}
-
-			if(CardAttachments.length>0) {
+				var QuickReplyText = "You can start by selecting any of the below or asking me questions, e.g. What postpaid plans do you have?"
+				var QuickReplyButtons = [];
+				QuickReplyButtons.push(
+					builder.CardAction.imBack(session, "Postpaid Plans", "Postpaid Plans"));
+				QuickReplyButtons.push(
+					builder.CardAction.imBack(session, "Internet Sharing", "Internet Sharing"));
+				QuickReplyButtons.push(
+					builder.CardAction.imBack(session, "Bill Payment", "Bill Payment"));
 				var respCards = new builder.Message(session)
-					.attachmentLayout(builder.AttachmentLayout.carousel)
-					.attachments(CardAttachments)
-					.suggestedActions(
-						builder.SuggestedActions.create(
-							session,QuickReplyButtons
-						)
-					);
-				session.send(respCards);
-			} else  {
-				var respCards = new builder.Message(session)
-					.attachmentLayout(builder.AttachmentLayout.carousel)
 					.text(QuickReplyText)
 					.suggestedActions(
-						builder.SuggestedActions.create(
-							session,QuickReplyButtons
-						)
+						builder.SuggestedActions.create(session,QuickReplyButtons)
 					);
 				session.send(respCards);
+				ApiAiQuickReplyTextPayload = "Postpaid Plans;What postpaid plans do you have?|Internet Sharing;What is internet sharing?|Bill Payment;How to pay bill?";		
+				
+			} else {
+				var QuickReplyText = "I don't quite get you. Would you like to pick a topic from below instead?";
+				var QuickReplyButtons = [];
+				QuickReplyButtons.push(
+					builder.CardAction.imBack(session, "Postpaid Plans", "Postpaid Plans"));
+				QuickReplyButtons.push(
+					builder.CardAction.imBack(session, "Internet Sharing", "Internet Sharing"));
+				QuickReplyButtons.push(
+					builder.CardAction.imBack(session, "Pay Bills", "Pay Bills"));
+				var respCards = new builder.Message(session)
+					.text(QuickReplyText)
+					.suggestedActions(
+						builder.SuggestedActions.create(session,QuickReplyButtons)
+					);
+				session.send(respCards);
+				ApiAiQuickReplyTextPayload = "Postpaid Plans;What postpaid plans do you have?|Internet Sharing;What is internet sharing?|Pay Bills;How to pay bill?";		
 			}
-			
-		} else if (response.result.fulfillment != null){
-			// This block of text is for API.ai webhook Facebook messages
-			// we need to store payload for each content
-			if(response.result.fulfillment.data != null) {
-				if(response.result.fulfillment.data.facebook != null) {
+		} else {
+			// no error from API.ai
+			var jsonobject = response.result.fulfillment.messages.filter(value=> {return value.platform=='facebook'});
+			if(jsonobject.length>0) {
 
-					if(response.result.fulfillment.data.facebook.quick_replies.length > 0) {
-						var ApiAiQuickReplyTextPayload = "";
+				// We have FB Text
+				var jsonFbText = response.result.fulfillment.messages.filter(value=> {return value.type==0 && value.platform=='facebook'});
+				if(jsonFbText.length>0) {
+					for(idx=0; idx<jsonFbText.length; idx++){
+						if(jsonFbText[idx].speech.length >0) {
+							session.send(jsonFbText[idx].speech);
+						}
+					}
+				}
 
-						var QuickReplyText = response.result.fulfillment.data.facebook.text;
-						var QuickReplyButtons = [];
+				// We have FB Card. Put all cards into carousel
+				var jsonFbCard = response.result.fulfillment.messages.filter(value=> {return value.type==1 && value.platform=='facebook'});
+				if(jsonFbCard.length>0) {
+					var CardAttachments = [];
+					var ApiAiButtonTextPayload = session.privateConversationData[ApiAiButtonPayload];
+					if(ApiAiButtonTextPayload==undefined) {
+						ApiAiButtonTextPayload = "Learn More;what is the call rate for infinite 150?";
+					}
+					for(idx=0; idx<jsonFbCard.length; idx++){
+						var CardButtons = [];
+						if(jsonFbCard[idx].buttons!=null) {
+							// store the Button Payload
 
-						for(idx=0; idx<response.result.fulfillment.data.facebook.quick_replies.length; idx++) {
+							for (idxButton=0; idxButton<jsonFbCard[idx].buttons.length; idxButton++) {
+								// Check if quick reply is it HTTP or normal string
+								wwwLocation = jsonFbCard[idx].buttons[idxButton].postback.search("http");
+								if(wwwLocation>=0){
+									// URL includes http://
+console.log(" test123 [" + jsonFbCard[idx].buttons[idxButton].postback.slice(wwwLocation) + "]")
+									CardButtons.push(
+										builder.CardAction.openUrl(session, jsonFbCard[idx].buttons[idxButton].postback, jsonFbCard[idx].buttons[idxButton].text));
+								} else {
+									// Button is normal imBack
+									CardButtons.push(
+										builder.CardAction.imBack(session, jsonFbCard[idx].buttons[idxButton].text, jsonFbCard[idx].buttons[idxButton].text));
 
-							var QuickReplyTitle = response.result.fulfillment.data.facebook.quick_replies[idx].title;
-							var QuickReplyPayload = response.result.fulfillment.data.facebook.quick_replies[idx].payload;
+									// Store the payload for button
+									if(ApiAiButtonTextPayload.length>0) {
+										if(ApiAiButtonTextPayload.search(jsonFbCard[idx].buttons[idxButton].text)<0) {
+											ApiAiButtonTextPayload += '|' + jsonFbCard[idx].buttons[idxButton].text + ';' + jsonFbCard[idx].buttons[idxButton].postback;
+										}
+									} else {
+										ApiAiButtonTextPayload = jsonFbCard[idx].buttons[idxButton].text + ';' + jsonFbCard[idx].buttons[idxButton].postback;
+									}								
+								}
+							}
 
-							var wwwLocation = response.result.fulfillment.data.facebook.quick_replies[idx].payload.search("http");
+							CardAttachments.push(
+								new builder.HeroCard(session)
+								.title(jsonFbCard[idx].title)
+								.text(jsonFbCard[idx].subtitle)
+								.images([ builder.CardImage.create(session, jsonFbCard[idx].imageUrl) ])
+								.buttons(CardButtons)
+							);
+						} else {
+							CardAttachments.push(
+								new builder.HeroCard(session)
+								.title(jsonFbCard[idx].title)
+								.text(jsonFbCard[idx].subtitle)
+								.images([ builder.CardImage.create(session, jsonFbCard[idx].imageUrl) ])
+							);									
+						}
+					}
+					session.privateConversationData[ApiAiButtonPayload] = ApiAiButtonTextPayload;
+					if(CardAttachments.length>0) {
+						var respCards = new builder.Message(session)
+							.attachmentLayout(builder.AttachmentLayout.carousel)
+							.attachments(CardAttachments);
+						session.send(respCards);
+					}
+				}
+
+				// we have Facebook Quick Reply. Put as quickreply							
+				var jsonFbQuickReply = response.result.fulfillment.messages.filter(value=> {return value.type==2 && value.platform=='facebook'});
+				var QuickReplyButtons = [];
+				var QuickReplyText = "";
+				if(jsonFbQuickReply.length>0) {
+					for(idx=0; idx<jsonFbQuickReply.length; idx++){
+						for (idxQuickReply=0; idxQuickReply<jsonFbQuickReply[idx].replies.length; idxQuickReply++) {
+
+							// Check if we have URL
+							var wwwLocation = jsonFbQuickReply[idx].replies[idxQuickReply].search("http");
+console.log(" test123 [" + jsonFbCard[idx].buttons[idxButton].postback.slice(wwwLocation) + "]")
+
+							// Add in our predetermined URL
 							if (wwwLocation>=0){
 								// URL includes http://
 								QuickReplyButtons.push(
-									builder.CardAction.openUrl(session, QuickReplyPayload, QuickReplyTitle));							
+									builder.CardAction.openUrl(session, jsonFbQuickReply[idx].replies[idxQuickReply], jsonFbQuickReply[idx].replies[idxQuickReply]));							
 							} else {
 								QuickReplyButtons.push(
-									builder.CardAction.imBack(session, QuickReplyTitle, QuickReplyTitle));
+									builder.CardAction.imBack(session, jsonFbQuickReply[idx].replies[idxQuickReply], jsonFbQuickReply[idx].replies[idxQuickReply]));
 							}
-							if(ApiAiQuickReplyTextPayload.length>0) {
-								ApiAiQuickReplyTextPayload += '|' + QuickReplyTitle + ',' + QuickReplyPayload;
+						}
+					}
+					QuickReplyText = jsonFbQuickReply[0].title;
+					if(CardAttachments.length>0) {
+						var respCards = new builder.Message(session)
+							.attachmentLayout(builder.AttachmentLayout.carousel)
+							.text(QuickReplyText)
+							.suggestedActions(
+								builder.SuggestedActions.create(session,QuickReplyButtons)
+							);
+						session.send(respCards);
+					}
+				}
+
+				// We have FB Images			
+				var jsonFbImage = response.result.fulfillment.messages.filter(value=> {return value.type==3 && value.platform=='facebook'});
+				if(jsonFbImage.length>0) {
+					var CardAttachmentsType3 = [];
+					for(idx=0; idx<jsonFbImage.length; idx++){
+						CardAttachmentsType3.push(
+							new builder.HeroCard(session)
+							.images([ builder.CardImage.create(session, jsonFbImage[idx].imageUrl) ])
+						);									
+					}
+					if(CardAttachmentsType3.length>0) {
+						var respCards = new builder.Message(session)
+							.attachmentLayout(builder.AttachmentLayout.carousel)
+							.attachments(CardAttachmentsType3);
+						session.send(respCards);
+					}
+				}
+
+				// we have Facebook Quick Reply from external DB
+				jsonFbQuickReply = response.result.fulfillment.messages.filter(value=> {return value.type==4 && value.platform=='facebook'});
+				QuickReplyButtons = [];
+				QuickReplyText = "";
+				if(jsonFbQuickReply.length>0) {
+					for(idx=0; idx<jsonFbQuickReply.length; idx++){
+						for (idxQuickReply=0; idxQuickReply<jsonFbQuickReply[idx].payload.facebook.quick_replies.length; idxQuickReply++) {						
+							// Check if we have URL
+							var wwwLocation = jsonFbQuickReply[idx].payload.facebook.quick_replies[idxQuickReply].payload.search("http");
+
+							// Add in our predetermined URL
+							if (wwwLocation>=0){
+								// URL includes http://
+								QuickReplyButtons.push(
+									builder.CardAction.openUrl(session,
+										jsonFbQuickReply[idx].payload.facebook.quick_replies[idxQuickReply].payload,
+										jsonFbQuickReply[idx].payload.facebook.quick_replies[idxQuickReply].title));							
 							} else {
-								ApiAiQuickReplyTextPayload += QuickReplyTitle + ',' + QuickReplyPayload;
+								QuickReplyButtons.push(
+									builder.CardAction.imBack(session, 
+										jsonFbQuickReply[idx].payload.facebook.quick_replies[idxQuickReply].title,
+										jsonFbQuickReply[idx].payload.facebook.quick_replies[idxQuickReply].title));
+
+								// Store the payload
+								if(ApiAiQuickReplyTextPayload.length>0) {
+									ApiAiQuickReplyTextPayload += '|' + 
+										jsonFbQuickReply[idx].payload.facebook.quick_replies[idxQuickReply].title + ';' +
+										jsonFbQuickReply[idx].payload.facebook.quick_replies[idxQuickReply].payload;
+								} else {
+									ApiAiQuickReplyTextPayload += 
+										jsonFbQuickReply[idx].payload.facebook.quick_replies[idxQuickReply].title + ';' +
+										jsonFbQuickReply[idx].payload.facebook.quick_replies[idxQuickReply].payload;
+								}
 							}
 						}
+					}
 
-						if(DebugLoggingOn) {
-							session.send("QuickReply Store:"+ApiAiQuickReplyTextPayload);
-						}
-
-						session.privateConversationData[ApiAiQuickReply] = ApiAiQuickReplyTextPayload;
-
+					QuickReplyText = jsonFbQuickReply[0].payload.facebook.text;
+					if(QuickReplyButtons.length>0) {
 						var respCards = new builder.Message(session)
 							.text(QuickReplyText)
 							.suggestedActions(
@@ -1055,15 +1094,105 @@ function ProcessApiAiResponse(session, response) {
 									session,QuickReplyButtons
 								)
 							);
-						session.send(respCards);		
+						session.send(respCards);
+					}
+				}			
+
+			} else if (response.result.fulfillment != null){
+				// This block of text is for API.ai webhook Facebook messages
+				// we need to store payload for each content
+				if(response.result.fulfillment.data != null) {
+					if(response.result.fulfillment.data.facebook != null) {
+
+						if(response.result.fulfillment.data.facebook.quick_replies.length > 0) {
+
+							var QuickReplyText = response.result.fulfillment.data.facebook.text;
+							var QuickReplyButtons = [];
+
+							for(idx=0; idx<response.result.fulfillment.data.facebook.quick_replies.length; idx++) {
+
+								var QuickReplyTitle = response.result.fulfillment.data.facebook.quick_replies[idx].title;
+								var QuickReplyPayload = response.result.fulfillment.data.facebook.quick_replies[idx].payload;
+
+								var wwwLocation = response.result.fulfillment.data.facebook.quick_replies[idx].payload.search("http");
+								if (wwwLocation>=0){
+									// URL includes http://
+									QuickReplyButtons.push(
+										builder.CardAction.openUrl(session, QuickReplyPayload, QuickReplyTitle));							
+								} else {
+									QuickReplyButtons.push(
+										builder.CardAction.imBack(session, QuickReplyTitle, QuickReplyTitle));
+								}
+								if(ApiAiQuickReplyTextPayload.length>0) {
+									ApiAiQuickReplyTextPayload += '|' + QuickReplyTitle + ';' + QuickReplyPayload;
+								} else {
+									ApiAiQuickReplyTextPayload += QuickReplyTitle + ';' + QuickReplyPayload;
+								}
+							}
+
+
+							var respCards = new builder.Message(session)
+								.text(QuickReplyText)
+								.suggestedActions(
+									builder.SuggestedActions.create(
+										session,QuickReplyButtons
+									)
+								);
+							session.send(respCards);		
+						} else {
+							session.send(response.result.fulfillment.data.facebook.text);
+						}
 					} else {
-						session.send(response.result.fulfillment.data.facebook.text);
+						session.send(response.result.fulfillment.messages.speech);
 					}
 				} else {
-					session.send(response.result.fulfillment.messages.speech);
-				}
+					var jsonObjectMsg = response.result.fulfillment.messages.filter(value=> {return value.type==0});
+					if(jsonObjectMsg) {
+						for(idx=0; idx<jsonObjectMsg.length; idx++) {
+							if(jsonObjectMsg[idx].speech.length >0) {
+								session.send(jsonObjectMsg[idx].speech);
+							}
+						}
+					}
+					var jsonObjectMsg = response.result.fulfillment.messages.filter(value=> {return value.type==3});
+					if(jsonObjectMsg) {
+						//images here
+						var CardAttachments = [];
+						if(jsonObjectMsg.length>0) {
+							for(idx=0; idx<jsonObjectMsg.length; idx++){
+								CardAttachments.push(
+									new builder.HeroCard(session)
+									.images([ builder.CardImage.create(session, jsonObjectMsg[idx].imageUrl) ])
+								);									
+							}
+							if(CardAttachments.length>0) {
+								var respCards = new builder.Message(session)
+									.attachmentLayout(builder.AttachmentLayout.carousel)
+									.attachments(CardAttachments)
+									.suggestedActions(
+										builder.SuggestedActions.create(
+											session,QuickReplyButtons
+										)
+									);
+								session.send(respCards);
+							} else  {
+								var respCards = new builder.Message(session)
+									.attachmentLayout(builder.AttachmentLayout.carousel)
+									.text(QuickReplyText)
+									.suggestedActions(
+										builder.SuggestedActions.create(
+											session,QuickReplyButtons
+										)
+									);
+								session.send(respCards);
+							}
+						}
+					}
+				}			
 			} else {
-				var jsonObjectMsg = response.result.fulfillment.messages.filter(value=> {return value.type==0});
+				// No Facebook Message. we only have normal message. output only normal string
+				// Print out each individual Messages
+				var jsonObjectMsg = response.result.fulfillment.messages.filter(value=> {return value.type==0 && value.platform==null});
 				if(jsonObjectMsg) {
 					for(idx=0; idx<jsonObjectMsg.length; idx++) {
 						if(jsonObjectMsg[idx].speech.length >0) {
@@ -1071,56 +1200,18 @@ function ProcessApiAiResponse(session, response) {
 						}
 					}
 				}
-				var jsonObjectMsg = response.result.fulfillment.messages.filter(value=> {return value.type==3});
-				if(jsonObjectMsg) {
-					//images here
-					var CardAttachments = [];
-					if(jsonObjectMsg.length>0) {
-						for(idx=0; idx<jsonObjectMsg.length; idx++){
-							CardAttachments.push(
-								new builder.HeroCard(session)
-								.images([ builder.CardImage.create(session, jsonObjectMsg[idx].imageUrl) ])
-							);									
-						}
-						if(CardAttachments.length>0) {
-							var respCards = new builder.Message(session)
-								.attachmentLayout(builder.AttachmentLayout.carousel)
-								.attachments(CardAttachments)
-								.suggestedActions(
-									builder.SuggestedActions.create(
-										session,QuickReplyButtons
-									)
-								);
-							session.send(respCards);
-						} else  {
-							var respCards = new builder.Message(session)
-								.attachmentLayout(builder.AttachmentLayout.carousel)
-								.text(QuickReplyText)
-								.suggestedActions(
-									builder.SuggestedActions.create(
-										session,QuickReplyButtons
-									)
-								);
-							session.send(respCards);
-						}
-					}
-				}
-			}						
-		} else {
-			// No Facebook Message. we only have normal message. output only normal string
-			// Print out each individual Messages
-			var jsonObjectMsg = response.result.fulfillment.messages.filter(value=> {return value.type==0 && value.platform==null});
-			if(jsonObjectMsg) {
-				for(idx=0; idx<jsonObjectMsg.length; idx++) {
-					if(jsonObjectMsg[idx].speech.length >0) {
-						session.send(jsonObjectMsg[idx].speech);
-					}
-				}
 			}
 		}
+
+		// Store the Button Payloads into Memory
+		session.privateConversationData[ApiAiQuickReply] = ApiAiQuickReplyTextPayload;
+		if(intro==1) {
+			ApiAiIntroWebHook = ApiAiQuickReplyTextPayload;
+		}
+		
 	} catch (e) {
 		console.log("ProcessApiAiResponse Error: [" + JSON.stringify(response.result) + ']');
-		session.send("Hi, I am Will, your Digi Virtual Assistant.How may I help you today?");
+		session.send("Hi, I am Will, your Digi Virtual Assistant. How may I help you today?");
 	}	
 }
 
@@ -1170,24 +1261,24 @@ function ProcessApiAiAndAddButton(session, response) {
 bot.dialog('CatchAll', [
     function (session) {
 		// Reset any conversation state
-//		session.privateConversationData[PlanRecommendState] = 0;
 		
 		// send the request to API.ai
 		// Senc request to API.ai using quickreply payload if we have it
 		var request = 0;
 		if(DebugLoggingOn) {
-			session.send("QuickReply Load: "+session.privateConversationData[ApiAiQuickReply]);
+			session.send("QuickReply Load: ["+session.privateConversationData[ApiAiQuickReply] + "] and [" + 
+						session.privateConversationData[ApiAiButtonPayload] + "]");
 		}
 
+		var FoundQuickReply = 0;
 		if (session.privateConversationData[ApiAiQuickReply] == undefined){
-			var FoundQuickReply = 0;
 			var thisstring = ApiAiIntroWebHook;
 			var res = thisstring.split("|");
 			session.privateConversationData[ApiAiQuickReply] = 0;
 
 			for(idx=0; idx<res.length; idx++) {
-				if(res[idx].search(session.message.text)>=0) {
-					var CurrentQuickReply = res[idx].split(",");
+				if(res[idx].indexOf(session.message.text)>=0) {
+					var CurrentQuickReply = res[idx].split(";");
 					request = apiai_app.textRequest(CurrentQuickReply[1], {
 						sessionId: session.message.address.conversation.id
 					});
@@ -1198,17 +1289,6 @@ bot.dialog('CatchAll', [
 					FoundQuickReply = 1;
 				}
 			}
-
-			// we cannot find the quickreply. Send the custom text
-			if(FoundQuickReply==0) {
-				request = apiai_app.textRequest(session.message.text, {
-					sessionId: session.message.address.conversation.id
-				});
-				request.end();
-				if(DebugLoggingOn) {
-					session.send("2. Sending to API.ai : " + session.message.text);
-				}
-			}
 		} else if(session.privateConversationData[ApiAiQuickReply] != 0) {
 			var FoundQuickReply = 0;
 			var thisstring = session.privateConversationData[ApiAiQuickReply] + "";
@@ -1216,8 +1296,29 @@ bot.dialog('CatchAll', [
 			session.privateConversationData[ApiAiQuickReply] = 0;
 
 			for(idx=0; idx<res.length; idx++) {
-				if(res[idx].search(session.message.text)>=0) {
-					var CurrentQuickReply = res[idx].split(",");
+				if(res[idx].indexOf(session.message.text)>=0) {
+					var CurrentQuickReply = res[idx].split(";");
+					request = apiai_app.textRequest(CurrentQuickReply[1], {
+						sessionId: session.message.address.conversation.id
+					});
+					request.end();
+					if(DebugLoggingOn) {
+						session.send("2. Sending to API.ai : " + CurrentQuickReply[1]);
+					}
+					FoundQuickReply = 1;
+				}
+			}
+		} 
+		
+		if(FoundQuickReply==0) {
+			// Don't have quick reply. Let's try to find from Button
+			var FoundButtonText = 0;
+			var buttonstring = session.privateConversationData[ApiAiButtonPayload] + "";
+			var res = buttonstring.split("|");
+
+			for(idx=0; idx<res.length; idx++) {
+				if(res[idx].indexOf(session.message.text)>=0) {
+					var CurrentQuickReply = res[idx].split(";");
 					request = apiai_app.textRequest(CurrentQuickReply[1], {
 						sessionId: session.message.address.conversation.id
 					});
@@ -1225,27 +1326,19 @@ bot.dialog('CatchAll', [
 					if(DebugLoggingOn) {
 						session.send("3. Sending to API.ai : " + CurrentQuickReply[1]);
 					}
-					FoundQuickReply = 1;
+					FoundButtonText = 1;
 				}
-			}
-
-			// we cannot find the quickreply. Send the custom text
-			if(FoundQuickReply==0) {
+			}			
+			
+			// Cannot find QuickReply & no button text
+			if(FoundButtonText==0) {
 				request = apiai_app.textRequest(session.message.text, {
 					sessionId: session.message.address.conversation.id
 				});
-				request.end();
+				request.end();				
 				if(DebugLoggingOn) {
 					session.send("4. Sending to API.ai : " + session.message.text);
 				}
-			}
-		} else {
-			request = apiai_app.textRequest(session.message.text, {
-				sessionId: session.message.address.conversation.id
-			});
-			request.end();				
-			if(DebugLoggingOn) {
-				session.send("5. Sending to API.ai : " + session.message.text);
 			}
 		}
 
@@ -1275,7 +1368,7 @@ bot.dialog('CatchAll', [
 					LogResponseTime(session);
 					return;
 				} catch (e) {
-					session.send("Hi, I am Will, your Digi Virtual Assistant.How may I help you today?")
+					session.send("Hi, I am Will, your Digi Virtual Assistant. How may I help you today?")
 					LogResponseTime(session);
 				}
 			}

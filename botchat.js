@@ -857,6 +857,10 @@
             s = n(159),
             a = n(43);
         t.sendMessage = function (e, t, n) {
+
+// Yan Keat: this is to store the text, so that if no response for x second, bot will resend this message
+currentBotText = e;
+
             return {
                 type: "Send_Message",
                 activity: {
@@ -5818,7 +5822,7 @@
                     , o.createElement("div", { id: "wc-loading-container-id", className:"wc-loading-container"}
 						, o.createElement("img", { src:botTyping})
 						, o.createElement("div", { className: "wc-typing wc-loading-container-typing"})
-					)
+					), startTypingTimer()	/*Timer to check if we have typing for too long*/
                     ,t)
 // this is persistent menu, but will scroll up / down
 //					, o.createElement("div", {id: "wc-persistent-menu-id"}, "ABCDE")
@@ -5932,6 +5936,7 @@
 					// uncomment  these code to put the Virtual Agent name on top instead of bellow
 					//o.createElement("div", {className: "wc-message-from wc-message-from-" + i}, e),
 						o.createElement("img", {className:"wc-message-from-bot-avatar",src: this.props.fromMe?'':botAvatar,onLoad: function(){
+							cancelTypingTimer();
 							var elements = document.getElementById('wc-loading-container-id');
 							if(elements){
 								elements.parentNode.removeChild(elements);
@@ -6052,7 +6057,9 @@
                 }, t.prototype.onClickSend = function () {
                     this.textInput.focus(), this.sendMessage()
                 }, t.prototype.onClickHome = function () {  //  Yan Keat: added code here to trigger Main Menu
-                    this.props.sendMessage("Tips")
+                    this.props.sendMessage("Chatbot in Training")
+                }, t.prototype.onClickResendTyping = function () {  //  Yan Keat: added code here to trigger Main Menu
+					this.props.sendMessage(currentBotText);
                 }, t.prototype.onChangeFile = function () {
                     this.textInput.focus(), this.props.sendFiles(this.fileInput.files), this.fileInput.value = null
                 }, t.prototype.render = function () {
@@ -6067,12 +6074,21 @@
 						var newTH = document.createElement('button');
 						newTH.id = 'wc-header-menu-id';
 						newTH.className = 'wc-header-menu';
-						newTH.innerHTML = 'Tips';
+						newTH.innerHTML = 'Chatbot in Training';
 						newTH.onclick = function () {
 							return e.onClickHome()
 						};
-					// Create Main Menu Button
                         element.appendChild(newTH);
+						
+						// Create invisible retry testing button
+						var newButton = document.createElement('button');
+						newButton.id = 'wc-resend-message';
+						newButton.className = 'wc-header-menu-invisible';
+						newButton.innerHTML = '';
+						newButton.onclick = function () {
+							return e.onClickResendTyping()
+						};
+                        element.appendChild(newButton);
                     }
 
 					// Create Popup Window					
@@ -6288,7 +6304,6 @@
 							element.appendChild(newTypingContainer);
 						}
                     }
-					
                     return r.__assign({}, e, {
                         activities: e.activities.filter(function (e) {
                             return "typing" !== e.type
@@ -6466,7 +6481,7 @@
         });
         var n = {
             "en-us": {
-                title: "Digi",
+                title: " ",
                 send: "Send",
                 unknownFile: "[File of type '%1']",
                 unknownCard: "[Unknown Card '%1']",

@@ -52,6 +52,9 @@ body .wc-app, .wc-app button, .wc-app input, .wc-app textarea {
   left: 45px;
   margin-top: 4px;
 }
+.wc-header-menu-invisible {
+  visibility: hidden; 
+}
 .wc-header-menu {
   /*margin-left: 40px;          /* for main menu at bottom*/
   /*float: left;                /* for main menu at bottom*/

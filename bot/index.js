@@ -951,9 +951,8 @@ function ProcessApiAiResponse(session, response, intro=0) {
 								wwwLocation = jsonFbCard[idx].buttons[idxButton].postback.search("http");
 								if(wwwLocation>=0){
 									// URL includes http://
-console.log(" test123 [" + jsonFbCard[idx].buttons[idxButton].postback.slice(wwwLocation) + "]")
 									CardButtons.push(
-										builder.CardAction.openUrl(session, jsonFbCard[idx].buttons[idxButton].postback, jsonFbCard[idx].buttons[idxButton].text));
+										builder.CardAction.openUrl(session, jsonFbCard[idx].buttons[idxButton].postback.slice(wwwLocation), jsonFbCard[idx].buttons[idxButton].text));
 								} else {
 									// Button is normal imBack
 									CardButtons.push(
@@ -1005,13 +1004,12 @@ console.log(" test123 [" + jsonFbCard[idx].buttons[idxButton].postback.slice(www
 
 							// Check if we have URL
 							var wwwLocation = jsonFbQuickReply[idx].replies[idxQuickReply].search("http");
-console.log(" test123 [" + jsonFbCard[idx].buttons[idxButton].postback.slice(wwwLocation) + "]")
 
 							// Add in our predetermined URL
 							if (wwwLocation>=0){
 								// URL includes http://
 								QuickReplyButtons.push(
-									builder.CardAction.openUrl(session, jsonFbQuickReply[idx].replies[idxQuickReply], jsonFbQuickReply[idx].replies[idxQuickReply]));							
+									builder.CardAction.openUrl(session, jsonFbQuickReply[idx].replies[idxQuickReply].slice(wwwLocation), jsonFbQuickReply[idx].replies[idxQuickReply]));							
 							} else {
 								QuickReplyButtons.push(
 									builder.CardAction.imBack(session, jsonFbQuickReply[idx].replies[idxQuickReply], jsonFbQuickReply[idx].replies[idxQuickReply]));
@@ -1063,7 +1061,7 @@ console.log(" test123 [" + jsonFbCard[idx].buttons[idxButton].postback.slice(www
 								// URL includes http://
 								QuickReplyButtons.push(
 									builder.CardAction.openUrl(session,
-										jsonFbQuickReply[idx].payload.facebook.quick_replies[idxQuickReply].payload,
+										jsonFbQuickReply[idx].payload.facebook.quick_replies[idxQuickReply].payload.slice(wwwLocation),
 										jsonFbQuickReply[idx].payload.facebook.quick_replies[idxQuickReply].title));							
 							} else {
 								QuickReplyButtons.push(
@@ -1118,7 +1116,7 @@ console.log(" test123 [" + jsonFbCard[idx].buttons[idxButton].postback.slice(www
 								if (wwwLocation>=0){
 									// URL includes http://
 									QuickReplyButtons.push(
-										builder.CardAction.openUrl(session, QuickReplyPayload, QuickReplyTitle));							
+										builder.CardAction.openUrl(session, QuickReplyPayload.slice(wwwLocation), QuickReplyTitle));							
 								} else {
 									QuickReplyButtons.push(
 										builder.CardAction.imBack(session, QuickReplyTitle, QuickReplyTitle));

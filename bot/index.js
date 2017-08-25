@@ -28,8 +28,7 @@ var tableStorage = new azure.AzureBotStorage({ gzipData: false }, azureTableClie
 // API.ai
 var apiai = require('apiai'); 
 var apiai_app = apiai(process.env.APIAI_CLIENT_ACCESS_TOKEN);
-var ApiAiIntroWebHook = 'Postpaid;Show me Postpaid Plans|Autobilling;What is autobilling?|Internet Sharing;What is internet sharing?|Bill Payment;How can I pay bills?';
-
+var ApiAiIntroWebHook = 'Postpaid;Show me Postpaid Plans>|Autobilling;What is autobilling?>|Bill Payment;How can I pay bills?|Prepaid Plans;What is Prepaid?>|Talktime Transfer;What is Talktime Transfer?';
 
 ////////////////////////////////////////////////////////////////////////////
 // Global Variables
@@ -890,16 +889,16 @@ function ProcessApiAiResponse(session, response, intro=0) {
 				QuickReplyButtons.push(
 					builder.CardAction.imBack(session, "Postpaid Plans", "Postpaid Plans"));
 				QuickReplyButtons.push(
-					builder.CardAction.imBack(session, "Internet Sharing", "Internet Sharing"));
+					builder.CardAction.imBack(session, "Prepaid Plans", "Prepaid Plans"));
 				QuickReplyButtons.push(
-					builder.CardAction.imBack(session, "Bill Payment", "Bill Payment"));
+					builder.CardAction.imBack(session, "Talktime Transfer", "Talktime Transfer"));
 				var respCards = new builder.Message(session)
 					.text(QuickReplyText)
 					.suggestedActions(
 						builder.SuggestedActions.create(session,QuickReplyButtons)
 					);
 				session.send(respCards);
-				ApiAiQuickReplyTextPayload = "Postpaid Plans;What postpaid plans do you have?|Internet Sharing;What is internet sharing?|Bill Payment;How to pay bill?";		
+				ApiAiQuickReplyTextPayload = ApiAiIntroWebHook;		
 				
 			} else {
 				var QuickReplyText = "I don't quite get you. Would you like to pick a topic from below instead?";
@@ -907,16 +906,16 @@ function ProcessApiAiResponse(session, response, intro=0) {
 				QuickReplyButtons.push(
 					builder.CardAction.imBack(session, "Postpaid Plans", "Postpaid Plans"));
 				QuickReplyButtons.push(
-					builder.CardAction.imBack(session, "Internet Sharing", "Internet Sharing"));
+					builder.CardAction.imBack(session, "Prepaid Plans", "Prepaid Plans"));
 				QuickReplyButtons.push(
-					builder.CardAction.imBack(session, "Pay Bills", "Pay Bills"));
+					builder.CardAction.imBack(session, "Talktime Transfer", "Talktime Transfer"));
 				var respCards = new builder.Message(session)
 					.text(QuickReplyText)
 					.suggestedActions(
 						builder.SuggestedActions.create(session,QuickReplyButtons)
 					);
 				session.send(respCards);
-				ApiAiQuickReplyTextPayload = "Postpaid Plans;What postpaid plans do you have?|Internet Sharing;What is internet sharing?|Pay Bills;How to pay bill?";		
+				ApiAiQuickReplyTextPayload = ApiAiIntroWebHook;		
 			}
 		} else {
 			// no error from API.ai
@@ -960,8 +959,34 @@ function ProcessApiAiResponse(session, response, intro=0) {
 
 									// Store the payload for button
 									if(ApiAiButtonTextPayload.length>0) {
-										if(ApiAiButtonTextPayload.search(jsonFbCard[idx].buttons[idxButton].text)<0) {
-											ApiAiButtonTextPayload += '|' + jsonFbCard[idx].buttons[idxButton].text + ';' + jsonFbCard[idx].buttons[idxButton].postback;
+										var buttonText = jsonFbCard[idx].buttons[idxButton].text;
+										var buttonPostback = jsonFbCard[idx].buttons[idxButton].postback;
+										var postbackLocation = ApiAiButtonTextPayload.search(buttonText);
+										if(postbackLocation < 0) {
+											ApiAiButtonTextPayload += '|' + buttonText + ';' + buttonPostback;
+										} else {	// We have existing Button Payload. Update with the latest value
+console.log("reach here 1" + ApiAiButtonTextPayload);
+											// if we have only 1 button
+											// if we have multiple buttons
+
+											var ReplacedPostback = 0;
+											var postbackArrays = ApiAiButtonTextPayload.split("|");
+											for(postbackIdx=0; postbackIdx<postbackArrays.length; postbackIdx++) {
+												var postbackText = postbackArrays[postbackIdx].split(";");
+												if(postbackText[0] == buttonText) {// we compare the whole string
+													postbackArrays[postbackIdx] = buttonText + ';' + buttonPostback;
+console.log("replacing with " + buttonText + ";" + buttonPostback);
+													ReplacedPostback = 1;
+												}
+											}
+											if(ReplacedPostback) {
+												ApiAiButtonTextPayload = postbackArrays.join("|");
+											} else {
+												// we have this scenario when ApiAiButtonTextPayload = "Learn More Infinite 150;What is the benefit for Infinite 150?>|Learn More Postpaid 50;What is the benefit of Postpaid 50?>|Learn More Postpaid 80;What is the benefit of Postpaid 80?>|Learn More Postpaid 110;What is the benefit of Postpaid 110?>", 
+												// but we couldn't replace because we can't find the exact "Learn More" String, then come here
+												ApiAiButtonTextPayload += '|' + buttonText + ';' + buttonPostback;
+											}
+console.log("Updated Payload " + ApiAiButtonTextPayload);
 										}
 									} else {
 										ApiAiButtonTextPayload = jsonFbCard[idx].buttons[idxButton].text + ';' + jsonFbCard[idx].buttons[idxButton].postback;
@@ -1275,8 +1300,8 @@ bot.dialog('CatchAll', [
 			session.privateConversationData[ApiAiQuickReply] = 0;
 
 			for(idx=0; idx<res.length; idx++) {
-				if(res[idx].indexOf(session.message.text)>=0) {
-					var CurrentQuickReply = res[idx].split(";");
+				var CurrentQuickReply = res[idx].split(";");
+				if(CurrentQuickReply[0] == session.message.text) {
 					request = apiai_app.textRequest(CurrentQuickReply[1], {
 						sessionId: session.message.address.conversation.id
 					});
@@ -1294,8 +1319,8 @@ bot.dialog('CatchAll', [
 			session.privateConversationData[ApiAiQuickReply] = 0;
 
 			for(idx=0; idx<res.length; idx++) {
-				if(res[idx].indexOf(session.message.text)>=0) {
-					var CurrentQuickReply = res[idx].split(";");
+				var CurrentQuickReply = res[idx].split(";");
+				if(CurrentQuickReply[0] == session.message.text) {
 					request = apiai_app.textRequest(CurrentQuickReply[1], {
 						sessionId: session.message.address.conversation.id
 					});
@@ -1315,8 +1340,8 @@ bot.dialog('CatchAll', [
 			var res = buttonstring.split("|");
 
 			for(idx=0; idx<res.length; idx++) {
-				if(res[idx].indexOf(session.message.text)>=0) {
-					var CurrentQuickReply = res[idx].split(";");
+				var CurrentQuickReply = res[idx].split(";");
+				if(CurrentQuickReply[0] == session.message.text) {
 					request = apiai_app.textRequest(CurrentQuickReply[1], {
 						sessionId: session.message.address.conversation.id
 					});

@@ -55,7 +55,7 @@ $( document ).ready(function() {
 function typingTimerCallback() {
 	if(typingTimer>0) {
 		var elapsedTime = (Date.now() - typingTimer)/1000;
-		if(elapsedTime>10) {	// Elapsed more than 10 seconds
+		if(elapsedTime>25) {	// Elapsed more than 10 seconds
 			if(currentBotText == "Let's Start") {
 				cancelTypingTimer();
 				location.reload(true);
